@@ -7,11 +7,14 @@
     <!-- Pyodide -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     
-    <!-- CodeMirror 5 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/selection/active-line.min.js"></script>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -166,7 +169,12 @@
         }
         
         .editor-container { flex: 1; position: relative; display: flex; flex-direction: column; }
-        .CodeMirror, .CodeMirror * { box-sizing: content-box; }
+        .CodeMirror, .CodeMirror * {
+            box-sizing: content-box;
+        }
+        .CodeMirror-activeline-background {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
         .CodeMirror { 
             position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100%; 
             font-family: var(--font-mono); font-size: 15px; line-height: 1.5;
@@ -526,6 +534,7 @@
                     indentUnit: 4,
                     matchBrackets: true,
                     autoCloseBrackets: true,
+                    styleActiveLine: true,
                     viewportMargin: Infinity,
                     extraKeys: {
                         Tab: function(cm) {
