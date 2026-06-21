@@ -557,6 +557,7 @@
             customAlgos: JSON.parse(localStorage.getItem('algorep_custom_algorithms') || '[]'),
 
             async init() {
+                this.customPlaylists = JSON.parse(localStorage.getItem('algo_playlists') || '[]');
                 this.editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
                     mode: "python",
                     theme: "monokai",
