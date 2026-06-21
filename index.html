@@ -435,7 +435,10 @@
     <div id="view-history" class="view">
         <div class="navbar">
             <div class="nav-brand" onclick="app.showHome()">Algo<span>Rep</span></div>
-            <button class="btn-secondary" style="padding: 6px 16px;" onclick="app.showHome()">Back</button>
+            <div>
+                <button class="btn-danger" style="padding: 6px 16px; margin-right: 10px;" onclick="app.clearHistory()">Clear History</button>
+                <button class="btn-secondary" style="padding: 6px 16px;" onclick="app.showHome()">Back</button>
+            </div>
         </div>
         <div class="container" style="max-width: 1000px;">
             <div class="card" style="margin-bottom: 2rem;">
@@ -650,6 +653,13 @@
                 this.showView('view-mode-select');
             },
             showHistory() { this.renderHistory(); this.showView('view-history'); },
+            clearHistory() {
+                if(confirm("Are you sure you want to clear all your solve history and personal bests?")) {
+                    this.history = [];
+                    this.saveData();
+                    this.renderHistory();
+                }
+            },
             showAddAlgo() { this.addTestCaseField(); this.showView('view-add'); },
 
             updateHomeStats() {
@@ -816,7 +826,7 @@ __err = io.StringIO()
 sys.stdout = __out
 sys.stderr = __err
 
-__global_scope = {}
+__global_scope = globals().copy()
 __exec_error = None
 __results = []
 
