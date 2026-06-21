@@ -1921,6 +1921,7 @@ for i in range(1, len(blocks), 7):
         "id": f"drill_{num}_{clean_id}",
         "title": title,
         "stub": stub,
+        "inputs_given": inputs,
         "test_cases": test_cases,
         "tags": [], # we could parse the table of contents but this is fine, or hardcode them
         "difficulty": difficulty
