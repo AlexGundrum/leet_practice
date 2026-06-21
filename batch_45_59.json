@@ -1,0 +1,311 @@
+[
+  {
+    "id": "drill_46_merge_k_sorted_lists_min_heap",
+    "title": "Merge K sorted lists (min-heap)",
+    "stub": "import heapq\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n    def __lt__(self, other):\n        return self.val < other.val\n\nclass Solution:\n    def merge_k_lists(self, lists: list[ListNode]) -> ListNode:\n        pass",
+    "inputs_given": "lists = [1->4->5,  1->3->4,  2->6]",
+    "test_cases": [
+      {
+        "call": "def mk(vs):\\n    if not vs:return None\\n    h=t=ListNode(vs[0])\\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\\n    return h\\ndef ls(h):\\n    r=[]\\n    while h:r.append(h.val);h=h.next\\n    return r\\nls(Solution().merge_k_lists([mk([1,4,5]),mk([1,3,4]),mk([2,6])]))",
+        "expected": "[1, 1, 2, 3, 4, 4, 5, 6]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "hard",
+    "description": "You are given an array of <code>k</code> linked-lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it."
+  },
+  {
+    "id": "drill_47_top_k_frequent_elements_heap_hash_map",
+    "title": "Top K frequent elements (heap + hash map)",
+    "stub": "import heapq\nfrom collections import Counter\n\nclass Solution:\n    def top_k_frequent(self, nums: list[int], k: int) -> list[int]:\n        pass",
+    "inputs_given": "nums = [1, 1, 1, 2, 2, 3]\nk = 2",
+    "test_cases": [
+      {
+        "call": "sorted(Solution().top_k_frequent([1,1,1,2,2,3],2))",
+        "expected": "[1, 2]"
+      },
+      {
+        "call": "Solution().top_k_frequent([1],1)",
+        "expected": "[1]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given an integer array <code>nums</code> and an integer <code>k</code>, return the <code>k</code> most frequent elements."
+  },
+  {
+    "id": "drill_48_fixed_window_max_sum_subarray_of_size_k",
+    "title": "Fixed window \u2014 max sum subarray of size k",
+    "stub": "class Solution:\n    def max_sum(self, nums: list[int], k: int) -> int:\n        pass",
+    "inputs_given": "nums = [2, 1, 5, 1, 3, 2]\nk = 3",
+    "test_cases": [
+      {
+        "call": "Solution().max_sum([2,1,5,1,3,2],3)",
+        "expected": "9"
+      },
+      {
+        "call": "Solution().max_sum([2,3,4,1,5],2)",
+        "expected": "7"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given an array of integers <code>nums</code> and an integer <code>k</code>, find the maximum sum of any contiguous subarray of size <code>k</code>."
+  },
+  {
+    "id": "drill_49_variable_window_longest_substring_without_repeating",
+    "title": "Variable window \u2014 longest substring without repeating",
+    "stub": "class Solution:\n    def length_of_longest(self, s: str) -> int:\n        pass",
+    "inputs_given": "s = \"abcabcbb\"",
+    "test_cases": [
+      {
+        "call": "Solution().length_of_longest(\"abcabcbb\")",
+        "expected": "3"
+      },
+      {
+        "call": "Solution().length_of_longest(\"bbbbb\")",
+        "expected": "1"
+      },
+      {
+        "call": "Solution().length_of_longest(\"pwwkew\")",
+        "expected": "3"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given a string <code>s</code>, find the length of the longest substring without repeating characters."
+  },
+  {
+    "id": "drill_50_two_pointers_pair_sum_in_sorted_array",
+    "title": "Two pointers \u2014 pair sum in sorted array",
+    "stub": "class Solution:\n    def two_sum(self, nums: list[int], target: int) -> list[int]:\n        pass",
+    "inputs_given": "nums = [2, 7, 11, 15]\ntarget = 9",
+    "test_cases": [
+      {
+        "call": "Solution().two_sum([2,7,11,15],9)",
+        "expected": "[0, 1]"
+      },
+      {
+        "call": "Solution().two_sum([2,3,4],6)",
+        "expected": "[0, 2]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given a 1-indexed array of integers <code>nums</code> that is already sorted in non-decreasing order, find two numbers such that they add up to a specific <code>target</code> number. Return their 0-indexed positions."
+  },
+  {
+    "id": "drill_51_dutch_national_flag_3_way_partition",
+    "title": "Dutch National Flag (3-way partition)",
+    "stub": "class Solution:\n    def sort_colors(self, nums: list[int]) -> list[int]:\n        pass",
+    "inputs_given": "nums = [2, 0, 2, 1, 1, 0]",
+    "test_cases": [
+      {
+        "call": "Solution().sort_colors([2,0,2,1,1,0])",
+        "expected": "[0, 0, 1, 1, 2, 2]"
+      },
+      {
+        "call": "Solution().sort_colors([2,0,1])",
+        "expected": "[0, 1, 2]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given an array <code>nums</code> with <code>n</code> objects colored red, white, or blue, sort them in-place so that objects of the same color are adjacent, with the colors in the order red (0), white (1), and blue (2)."
+  },
+  {
+    "id": "drill_52_fast_slow_pointers_find_duplicate_floyd_s_on_array",
+    "title": "Fast/slow pointers \u2014 find duplicate (Floyd's on array)",
+    "stub": "class Solution:\n    def find_duplicate(self, nums: list[int]) -> int:\n        pass",
+    "inputs_given": "nums = [1, 3, 4, 2, 2]",
+    "test_cases": [
+      {
+        "call": "Solution().find_duplicate([1,3,4,2,2])",
+        "expected": "2"
+      },
+      {
+        "call": "Solution().find_duplicate([3,1,3,4,2])",
+        "expected": "3"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given an array of integers <code>nums</code> containing <code>n + 1</code> integers where each integer is in the range <code>[1, n]</code> inclusive. There is only one repeated number in <code>nums</code>, return this repeated number. You must solve the problem without modifying the array."
+  },
+  {
+    "id": "drill_53_prefix_sum_1d_range_query",
+    "title": "Prefix sum \u2014 1D range query",
+    "stub": "class NumArray:\n    def __init__(self, nums: list[int]):\n        pass\n    def sum_range(self, left: int, right: int) -> int:\n        pass",
+    "inputs_given": "nums = [-2, 0, 3, -5, 2, -1]\nleft = 0, right = 2",
+    "test_cases": [
+      {
+        "call": "n=NumArray([-2,0,3,-5,2,-1]);[n.sum_range(0,2),n.sum_range(2,5),n.sum_range(0,5)]",
+        "expected": "[1, -1, -3]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given an integer array <code>nums</code>, handle multiple queries to calculate the sum of the elements of <code>nums</code> between indices <code>left</code> and <code>right</code> inclusive."
+  },
+  {
+    "id": "drill_54_kadane_s_algorithm_max_subarray_sum",
+    "title": "Kadane's algorithm (max subarray sum)",
+    "stub": "class Solution:\n    def max_subarray(self, nums: list[int]) -> int:\n        pass",
+    "inputs_given": "nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]",
+    "test_cases": [
+      {
+        "call": "Solution().max_subarray([-2,1,-3,4,-1,2,1,-5,4])",
+        "expected": "6"
+      },
+      {
+        "call": "Solution().max_subarray([1])",
+        "expected": "1"
+      },
+      {
+        "call": "Solution().max_subarray([5,4,-1,7,8])",
+        "expected": "23"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given an integer array <code>nums</code>, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum."
+  },
+  {
+    "id": "drill_55_1d_dp_climbing_stairs_fibonacci",
+    "title": "1D DP \u2014 climbing stairs / Fibonacci",
+    "stub": "class Solution:\n    def climb_stairs(self, n: int) -> int:\n        pass",
+    "inputs_given": "n = 5",
+    "test_cases": [
+      {
+        "call": "Solution().climb_stairs(5)",
+        "expected": "8"
+      },
+      {
+        "call": "Solution().climb_stairs(3)",
+        "expected": "3"
+      },
+      {
+        "call": "Solution().climb_stairs(1)",
+        "expected": "1"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "You are climbing a staircase. It takes <code>n</code> steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?"
+  },
+  {
+    "id": "drill_56_1d_dp_house_robber_max_non_adjacent",
+    "title": "1D DP \u2014 house robber (max non-adjacent)",
+    "stub": "class Solution:\n    def rob(self, nums: list[int]) -> int:\n        pass",
+    "inputs_given": "nums = [2, 7, 9, 3, 1]",
+    "test_cases": [
+      {
+        "call": "Solution().rob([2,7,9,3,1])",
+        "expected": "12"
+      },
+      {
+        "call": "Solution().rob([1,2,3,1])",
+        "expected": "4"
+      },
+      {
+        "call": "Solution().rob([2,1])",
+        "expected": "2"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, but adjacent houses have security systems connected. Given an integer array <code>nums</code> representing the money of each house, return the maximum amount of money you can rob tonight without alerting the police."
+  },
+  {
+    "id": "drill_57_1d_dp_coin_change_unbounded_knapsack",
+    "title": "1D DP \u2014 coin change (unbounded knapsack)",
+    "stub": "class Solution:\n    def coin_change(self, coins: list[int], amount: int) -> int:\n        pass",
+    "inputs_given": "coins = [1, 5, 6, 9]\namount = 11",
+    "test_cases": [
+      {
+        "call": "Solution().coin_change([1,5,6,9],11)",
+        "expected": "2"
+      },
+      {
+        "call": "Solution().coin_change([2],3)",
+        "expected": "-1"
+      },
+      {
+        "call": "Solution().coin_change([1],0)",
+        "expected": "0"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "You are given an integer array <code>coins</code> representing coins of different denominations and an integer <code>amount</code> representing a total amount of money. Return the fewest number of coins that you need to make up that amount. If it cannot be made up, return <code>-1</code>."
+  },
+  {
+    "id": "drill_58_1d_dp_lis_o_n_log_n_with_binary_search",
+    "title": "1D DP \u2014 LIS O(n log n) with binary search",
+    "stub": "import bisect\n\nclass Solution:\n    def length_of_lis(self, nums: list[int]) -> int:\n        pass",
+    "inputs_given": "nums = [10, 9, 2, 5, 3, 7, 101, 18]",
+    "test_cases": [
+      {
+        "call": "Solution().length_of_lis([10,9,2,5,3,7,101,18])",
+        "expected": "4"
+      },
+      {
+        "call": "Solution().length_of_lis([0,1,0,3,2,3])",
+        "expected": "4"
+      },
+      {
+        "call": "Solution().length_of_lis([7,7,7,7])",
+        "expected": "1"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given an integer array <code>nums</code>, return the length of the longest strictly increasing subsequence."
+  },
+  {
+    "id": "drill_59_2d_dp_lcs_longest_common_subsequence",
+    "title": "2D DP \u2014 LCS (longest common subsequence)",
+    "stub": "class Solution:\n    def lcs(self, text1: str, text2: str) -> int:\n        pass",
+    "inputs_given": "text1 = \"abcde\"\ntext2 = \"ace\"",
+    "test_cases": [
+      {
+        "call": "Solution().lcs(\"abcde\",\"ace\")",
+        "expected": "3"
+      },
+      {
+        "call": "Solution().lcs(\"abc\",\"abc\")",
+        "expected": "3"
+      },
+      {
+        "call": "Solution().lcs(\"abc\",\"def\")",
+        "expected": "0"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given two strings <code>text1</code> and <code>text2</code>, return the length of their longest common subsequence. If there is no common subsequence, return <code>0</code>."
+  },
+  {
+    "id": "drill_60_2d_dp_edit_distance_levenshtein",
+    "title": "2D DP \u2014 edit distance (Levenshtein)",
+    "stub": "class Solution:\n    def min_distance(self, word1: str, word2: str) -> int:\n        pass",
+    "inputs_given": "word1 = \"horse\"\nword2 = \"ros\"",
+    "test_cases": [
+      {
+        "call": "Solution().min_distance(\"horse\",\"ros\")",
+        "expected": "3"
+      },
+      {
+        "call": "Solution().min_distance(\"intention\",\"execution\")",
+        "expected": "5"
+      },
+      {
+        "call": "Solution().min_distance(\"\",\"a\")",
+        "expected": "1"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given two strings <code>word1</code> and <code>word2</code>, return the minimum number of operations required to convert <code>word1</code> to <code>word2</code>. Operations are insert, delete, or replace a character."
+  }
+]
