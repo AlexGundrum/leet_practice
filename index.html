@@ -345,6 +345,19 @@
         </div>
     </div>
 
+    <!-- Modal for saving current problem to a custom playlist -->
+    <div id="modal-save-to-playlist" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 400px; display: flex; flex-direction: column;">
+            <div class="flex-between" style="margin-bottom: 1rem;">
+                <h2 style="margin:0;">Add to Playlist</h2>
+                <button class="btn-secondary" onclick="document.getElementById('modal-save-to-playlist').style.display='none'">Close</button>
+            </div>
+            <div id="save-to-playlist-options" style="display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto;">
+                <!-- Filled dynamically -->
+            </div>
+        </div>
+    </div>
+
     <!-- Mode Select View -->
     <div id="view-mode-select" class="view">
         <div class="navbar">
@@ -385,6 +398,7 @@
                 <div id="practice-title" style="font-weight: 600; font-size: 1.1rem;">Algorithm Title</div>
                 <span id="practice-badge" class="badge">EASY</span>
                 <span id="practice-mode-indicator" style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 10px;">Blitz</span>
+                <button class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem; margin-left: 10px;" onclick="app.showSaveToPlaylistModal()">+ Playlist</button>
             </div>
             <div style="font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 1.25rem; display: flex; align-items: center; gap: 15px;">
                 <button class="btn-secondary" id="practice-btn-prev" style="padding: 4px 10px; font-size: 0.9rem; display: none;" onclick="app.navigatePlaylist(-1)">← Prev</button>
@@ -811,6 +825,44 @@
 
             saveCustomPlaylists() {
                 localStorage.setItem('algo_playlists', JSON.stringify(this.customPlaylists));
+            },
+
+            showSaveToPlaylistModal() {
+                const container = document.getElementById('save-to-playlist-options');
+                if (this.customPlaylists.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">You have no custom playlists.</p><button class="btn-primary" onclick="app.showCreatePlaylistModal(); document.getElementById(\'modal-save-to-playlist\').style.display=\'none\';">Create Playlist</button>';
+                } else {
+                    container.innerHTML = this.customPlaylists.map(p => {
+                        const hasIt = p.algorithms.includes(this.currentAlgo.id);
+                        const btnText = hasIt ? 'Already Added' : 'Add to Playlist';
+                        const btnClass = hasIt ? 'btn-secondary' : 'btn-primary';
+                        const disabled = hasIt ? 'disabled' : '';
+                        return `<div class="card flex-between" style="padding: 10px 15px; margin-bottom: 0;">
+                            <span style="font-weight: 600;">${p.name}</span>
+                            <button class="${btnClass}" style="padding: 6px 12px; font-size: 0.85rem;" ${disabled} onclick="app.saveToPlaylist('${p.id}')">${btnText}</button>
+                        </div>`;
+                    }).join('');
+                }
+                document.getElementById('modal-save-to-playlist').style.display = 'flex';
+            },
+
+            saveToPlaylist(playlistId) {
+                let p = this.customPlaylists.find(x => x.id === playlistId);
+                if (p && !p.algorithms.includes(this.currentAlgo.id)) {
+                    p.algorithms.push(this.currentAlgo.id);
+                    this.saveCustomPlaylists();
+                    document.getElementById('modal-save-to-playlist').style.display = 'none';
+                    
+                    // Show a tiny non-intrusive notification (re-using the top bar momentarily)
+                    const titleEl = document.getElementById('practice-title');
+                    const origTitle = titleEl.innerText;
+                    titleEl.innerText = `✅ Added to ${p.name}`;
+                    titleEl.style.color = 'var(--success)';
+                    setTimeout(() => {
+                        titleEl.innerText = origTitle;
+                        titleEl.style.color = '';
+                    }, 2000);
+                }
             },
 
             showPlaylistDetail(id) {
