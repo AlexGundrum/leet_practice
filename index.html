@@ -386,7 +386,13 @@
                 <span id="practice-badge" class="badge">EASY</span>
                 <span id="practice-mode-indicator" style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 10px;">Blitz</span>
             </div>
-            <div style="font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 1.25rem; display: flex; align-items: center; gap: 20px;">
+            <div style="font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 1.25rem; display: flex; align-items: center; gap: 15px;">
+                <button class="btn-secondary" id="practice-btn-prev" style="padding: 4px 10px; font-size: 0.9rem; display: none;" onclick="app.navigatePlaylist(-1)">← Prev</button>
+                <button class="btn-secondary" id="practice-btn-next" style="padding: 4px 10px; font-size: 0.9rem; display: none;" onclick="app.navigatePlaylist(1)">Next →</button>
+                <button class="btn-danger" id="practice-btn-exit" style="padding: 4px 10px; font-size: 0.9rem; display: none;" onclick="app.giveUp()">Exit Playlist</button>
+                
+                <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 5px;" id="practice-nav-divider"></div>
+
                 <span id="practice-score" style="color: var(--success); font-size: 1rem; font-family: var(--font-sans); font-weight: 600;"></span>
                 <div style="background: var(--bg-layer-2); padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
                     <span id="practice-timer">00:00</span>
@@ -511,7 +517,8 @@
             
             <div class="flex-center" style="margin-top: 3rem; gap: 1.5rem;">
                 <button class="btn-secondary" onclick="app.startPractice(true)" style="padding: 12px 24px;">Try Again</button>
-                <button class="btn-primary" onclick="app.showProblemList()" style="padding: 12px 24px;">Back to Problem Set</button>
+                <button class="btn-secondary" id="pb-res-btn-next" onclick="app.navigatePlaylist(1)" style="padding: 12px 24px; display: none;">Next Problem →</button>
+                <button class="btn-primary" onclick="app.returnFromPB()" style="padding: 12px 24px;">Back</button>
             </div>
         </div>
     </div>
@@ -955,6 +962,30 @@
                 this.timerInterval = setInterval(() => this.tickTimer(), 100);
             },
 
+            navigatePlaylist(dir) {
+                if (!this.currentPlaylistId) return;
+                const smart = this.getSmartPlaylists();
+                let p = smart.find(x => x.id === this.currentPlaylistId) || this.customPlaylists.find(x => x.id === this.currentPlaylistId);
+                if (!p) return;
+                
+                const idx = p.algorithms.indexOf(this.currentAlgo.id);
+                if (idx === -1) return;
+                
+                let nextIdx = idx + dir;
+                if (nextIdx < 0) nextIdx = p.algorithms.length - 1;
+                if (nextIdx >= p.algorithms.length) nextIdx = 0;
+                
+                this.startPracticeFromList(p.algorithms[nextIdx]);
+            },
+
+            returnFromPB() {
+                if (this.currentPlaylistId) {
+                    this.showPlaylistDetail(this.currentPlaylistId);
+                } else {
+                    this.showProblemList();
+                }
+            },
+
             showModeSelect(mode) {
                 this.mode = mode;
                 document.getElementById('mode-title').innerText = mode === 'blitz' ? 'Blitz Mode Setup' : 'Personal Best Setup';
@@ -1048,6 +1079,19 @@
                     document.getElementById('btn-skip').style.display = 'none';
                     document.getElementById('btn-give-up').style.display = 'inline-block';
                     document.getElementById('practice-score').innerText = '';
+                }
+
+                if (this.mode === 'pb' && this.currentPlaylistId) {
+                    document.getElementById('practice-btn-prev').style.display = 'inline-block';
+                    document.getElementById('practice-btn-next').style.display = 'inline-block';
+                    document.getElementById('practice-btn-exit').style.display = 'inline-block';
+                    document.getElementById('practice-nav-divider').style.display = 'block';
+                    document.getElementById('btn-give-up').style.display = 'none'; // Hide the bottom Give Up button
+                } else {
+                    document.getElementById('practice-btn-prev').style.display = 'none';
+                    document.getElementById('practice-btn-next').style.display = 'none';
+                    document.getElementById('practice-btn-exit').style.display = 'none';
+                    document.getElementById('practice-nav-divider').style.display = 'none';
                 }
 
                 let descHtml = ``;
@@ -1335,6 +1379,12 @@ json.dumps({
                         <td>${h.passed ? '<span class="text-green" style="font-weight:600;">Pass</span>' : '<span class="text-red" style="font-weight:600;">Fail</span>'}</td>
                     </tr>
                 `).join('');
+
+                if (this.currentPlaylistId) {
+                    document.getElementById('pb-res-btn-next').style.display = 'inline-block';
+                } else {
+                    document.getElementById('pb-res-btn-next').style.display = 'none';
+                }
 
                 this.showView('view-pb-results');
             },
