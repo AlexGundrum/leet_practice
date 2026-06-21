@@ -867,6 +867,7 @@
 
             showPlaylistDetail(id) {
                 this.currentPlaylistId = id;
+                this.currentPlaylistSnapshot = null;
                 const smart = this.getSmartPlaylists();
                 let p = smart.find(x => x.id === id) || this.customPlaylists.find(x => x.id === id);
                 if(!p) return;
@@ -1005,6 +1006,15 @@
             startPracticeFromList(id) {
                 this.mode = 'pb';
                 this.currentAlgo = this.algorithms.find(a => a.id === id);
+                
+                if (!this.currentPlaylistSnapshot && this.currentPlaylistId) {
+                    const smart = this.getSmartPlaylists();
+                    let p = smart.find(x => x.id === this.currentPlaylistId) || this.customPlaylists.find(x => x.id === this.currentPlaylistId);
+                    if (p) {
+                        this.currentPlaylistSnapshot = [...p.algorithms];
+                    }
+                }
+
                 this.setupPracticeUI();
                 this.showView('view-practice');
                 setTimeout(() => this.editor.refresh(), 50);
@@ -1015,19 +1025,19 @@
             },
 
             navigatePlaylist(dir) {
-                if (!this.currentPlaylistId) return;
-                const smart = this.getSmartPlaylists();
-                let p = smart.find(x => x.id === this.currentPlaylistId) || this.customPlaylists.find(x => x.id === this.currentPlaylistId);
-                if (!p) return;
+                if (!this.currentPlaylistSnapshot) return;
                 
-                const idx = p.algorithms.indexOf(this.currentAlgo.id);
-                if (idx === -1) return;
+                const algorithms = this.currentPlaylistSnapshot;
+                if (!algorithms || algorithms.length === 0) return;
+                
+                const idx = algorithms.indexOf(this.currentAlgo.id);
+                if (idx === -1) return; // Should not happen with snapshot
                 
                 let nextIdx = idx + dir;
-                if (nextIdx < 0) nextIdx = p.algorithms.length - 1;
-                if (nextIdx >= p.algorithms.length) nextIdx = 0;
+                if (nextIdx < 0) nextIdx = algorithms.length - 1;
+                if (nextIdx >= algorithms.length) nextIdx = 0;
                 
-                this.startPracticeFromList(p.algorithms[nextIdx]);
+                this.startPracticeFromList(algorithms[nextIdx]);
             },
 
             returnFromPB() {
