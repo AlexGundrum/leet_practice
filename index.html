@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoRep</title>
+    <!-- Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    
+    <!-- CodeMirror 5 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #0f0f11;
+            --bg-layer-1: #1a1a1f;
+            --bg-layer-2: #28282d;
+            --border-color: #3e3e42;
+            --text-primary: #eff1f6;
+            --text-secondary: #8b949e;
+            --accent: #ffa116;
+            --accent-hover: #ffb84d;
+            --success: #2cbb5d;
+            --error: #ef4743;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #1a1a1a;
+            padding: 10px 20px;
+            box-shadow: 0 4px 14px rgba(255, 161, 22, 0.3);
+        }
+        .btn-primary:hover:not(:disabled) { 
+            background: var(--accent-hover); 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 161, 22, 0.4);
+        }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+        .btn-secondary {
+            background: var(--bg-layer-2);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+        }
+        .btn-secondary:hover { 
+            background: #34343a; 
+            border-color: #4a4a52;
+        }
+
+        .btn-danger { background: rgba(239, 71, 67, 0.15); color: var(--error); border: 1px solid rgba(239, 71, 67, 0.3); padding: 8px 16px; }
+        .btn-danger:hover { background: rgba(239, 71, 67, 0.25); }
+        .btn-success { background: var(--success); color: white; padding: 10px 20px; }
+
+        /* SPA Views */
+        .view { display: none; height: 100%; width: 100%; overflow-y: auto; }
+        .view.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-base); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner {
+            border: 4px solid var(--border-color); border-top: 4px solid var(--accent);
+            border-radius: 50%; width: 48px; height: 48px; animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Typography & Layouts */
+        .container { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; width: 100%; }
+        h1, h2, h3 { margin-bottom: 1rem; font-weight: 600; }
+        h1.title { color: var(--text-primary); font-size: 3.5rem; text-align: center; margin-bottom: 2rem; font-weight: 700; letter-spacing: -1px; }
+        h1.title span { color: var(--accent); }
+        
+        .card { 
+            background: var(--bg-layer-1); 
+            border-radius: 12px; 
+            padding: 2.5rem; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 1.5rem; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .flex-center { display: flex; align-items: center; justify-content: center; gap: 1rem; }
+        .flex-between { display: flex; align-items: center; justify-content: space-between; }
+        
+        /* Badges */
+        .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+        .badge.easy { color: #00b8a3; background: rgba(0, 184, 163, 0.15); }
+        .badge.medium { color: #ffc01e; background: rgba(255, 192, 30, 0.15); }
+        .badge.hard { color: #ff375f; background: rgba(255, 55, 95, 0.15); }
+
+        /* Navbar */
+        .navbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 2rem; background: var(--bg-layer-1); border-bottom: 1px solid var(--border-color);
+        }
+        .nav-brand { color: var(--text-primary); font-weight: 700; font-size: 1.5rem; cursor: pointer; letter-spacing: -0.5px; }
+        .nav-brand span { color: var(--accent); }
+
+        /* Practice Screen Layout */
+        .practice-container { display: flex; flex: 1; overflow: hidden; background: var(--bg-base); padding: 10px; gap: 10px; }
+        .panel { 
+            background: var(--bg-layer-1); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        .panel-left { flex: 0 0 40%; }
+        .panel-right { flex: 1; }
+        
+        .panel-header { 
+            padding: 12px 20px; 
+            background: var(--bg-layer-2); 
+            border-bottom: 1px solid var(--border-color); 
+            font-weight: 600; 
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .problem-desc { padding: 20px; overflow-y: auto; flex: 1; line-height: 1.6; }
+        .problem-desc pre { 
+            background: var(--bg-base); 
+            padding: 15px; 
+            border-radius: 6px; 
+            font-family: var(--font-mono); 
+            margin: 15px 0; 
+            border: 1px solid var(--border-color); 
+            white-space: pre-wrap; 
+            color: #d4d4d4;
+        }
+        
+        .editor-container { flex: 1; position: relative; display: flex; flex-direction: column; }
+        .CodeMirror, .CodeMirror * {
+            box-sizing: content-box;
+        }
+        .CodeMirror { 
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100%; 
+            font-family: var(--font-mono); font-size: 15px; line-height: 1.5;
+        }
+        .CodeMirror-vscrollbar {
+            right: 0; top: 0; overflow-x: hidden; overflow-y: scroll;
+        }
+        
+        .output-panel { 
+            height: 35%; border-top: 1px solid var(--border-color); 
+            display: flex; flex-direction: column; background: var(--bg-layer-1); 
+        }
+        .output-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 8px 20px; background: var(--bg-layer-2); border-bottom: 1px solid var(--border-color); font-size: 0.9rem; font-weight: 600; 
+        }
+        .output-content { flex: 1; overflow-y: auto; padding: 15px 20px; font-family: var(--font-mono); font-size: 0.9rem; }
+        
+        .action-bar { padding: 15px 20px; background: var(--bg-layer-1); display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); }
+        
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 16px 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        tr:hover { background: rgba(255, 255, 255, 0.02); }
+        
+        .text-green { color: var(--success); }
+        .text-red { color: var(--error); }
+        
+        /* Inputs */
+        input, select, textarea {
+            background: var(--bg-layer-2); border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 12px 16px; border-radius: 6px;
+            font-family: inherit; width: 100%; margin-bottom: 1.5rem;
+            font-size: 1rem; transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner" id="loading-spinner"></div>
+        <p id="loading-message" style="margin-top: 2rem; color: var(--text-secondary); font-size: 1.1rem;">Initializing Python Environment...</p>
+    </div>
+
+    <!-- Home View -->
+    <div id="view-home" class="view">
+        <div class="container" style="margin: auto;">
+            <h1 class="title">Algo<span>Rep</span></h1>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: -1.5rem; margin-bottom: 3rem; font-size: 1.1rem;">Master algorithms with focused repetition.</p>
+            
+            <div class="flex-center" style="margin-bottom: 3rem; gap: 2rem;">
+                <button class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.2rem;" onclick="app.showModeSelect('blitz')">⚡ Blitz Mode</button>
+                <button class="btn-secondary" style="padding: 1.2rem 3rem; font-size: 1.2rem;" onclick="app.showModeSelect('pb')">⏱️ Personal Best</button>
+            </div>
+
+            <div class="card flex-between" style="padding: 2rem 3rem;">
+                <div style="text-align: center;">
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Attempts</h3>
+                    <div id="stat-attempts" style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem;">0</div>
+                </div>
+                <div style="text-align: center;">
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Pass Rate</h3>
+                    <div id="stat-passrate" style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: var(--text-primary);">0%</div>
+                </div>
+                <div style="text-align: center;">
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Mastered</h3>
+                    <div id="stat-mastered" style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: var(--accent);">0</div>
+                </div>
+            </div>
+
+            <div class="flex-center" style="margin-top: 2rem; gap: 1.5rem;">
+                <button class="btn-secondary" onclick="app.showHistory()">View History</button>
+                <button class="btn-secondary" onclick="app.showAddAlgo()">+ Add Algorithm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Select View -->
+    <div id="view-mode-select" class="view">
+        <div class="navbar">
+            <div class="nav-brand" onclick="app.showHome()">Algo<span>Rep</span></div>
+            <button class="btn-secondary" style="padding: 6px 16px;" onclick="app.showHome()">Cancel</button>
+        </div>
+        <div class="container">
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <h2 id="mode-title" style="margin-bottom: 2rem;">Mode Setup</h2>
+                
+                <div id="blitz-config" style="display: none;">
+                    <label style="display:block; margin-bottom: 0.5rem; color: var(--text-secondary); font-weight: 600;">Time Limit (Minutes)</label>
+                    <input type="number" id="blitz-minutes" value="10" min="1" max="120">
+                    <label style="display:block; margin-bottom: 0.5rem; color: var(--text-secondary); font-weight: 600;">Tag Filter (Optional)</label>
+                    <input type="text" id="blitz-tag" placeholder="e.g. array, graph">
+                </div>
+
+                <div id="pb-config" style="display: none;">
+                    <label style="display:block; margin-bottom: 0.5rem; color: var(--text-secondary); font-weight: 600;">Select Algorithm</label>
+                    <select id="pb-select" style="margin-bottom: 1.5rem;"></select>
+                    <div class="flex-center" style="margin-bottom: 1.5rem;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">OR</span>
+                    </div>
+                    <button class="btn-secondary" style="width: 100%; margin-bottom: 1.5rem;" onclick="app.shufflePB()">🎲 Random Algorithm</button>
+                </div>
+
+                <button class="btn-primary" style="width: 100%; font-size: 1.1rem; padding: 14px;" onclick="app.startPractice()">Start Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Practice View -->
+    <div id="view-practice" class="view">
+        <div class="navbar" style="padding: 12px 20px;">
+            <div class="flex-center" style="gap: 20px;">
+                <div class="nav-brand" onclick="app.showHome()">Algo<span>Rep</span></div>
+                <div style="width: 1px; height: 24px; background: var(--border-color);"></div>
+                <div id="practice-title" style="font-weight: 600; font-size: 1.1rem;">Algorithm Title</div>
+                <span id="practice-badge" class="badge">EASY</span>
+                <span id="practice-mode-indicator" style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 10px;">Blitz</span>
+            </div>
+            <div style="font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 1.25rem; display: flex; align-items: center; gap: 20px;">
+                <span id="practice-score" style="color: var(--success); font-size: 1rem; font-family: var(--font-sans); font-weight: 600;"></span>
+                <div style="background: var(--bg-layer-2); padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <span id="practice-timer">00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="practice-container">
+            <div class="panel panel-left">
+                <div class="panel-header">Description</div>
+                <div class="problem-desc" id="problem-desc-content"></div>
+            </div>
+            
+            <div class="panel panel-right">
+                <div class="panel-header" style="justify-content: space-between;">
+                    <span>Code Editor</span>
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-family: var(--font-mono);">Python 3</span>
+                </div>
+                <div class="editor-container">
+                    <textarea id="code-editor"></textarea>
+                </div>
+                
+                <div class="output-panel" id="output-panel" style="display: none;">
+                    <div class="output-header">
+                        <span>Test Results</span>
+                        <button style="background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size: 1.2rem; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-secondary)'" onclick="document.getElementById('output-panel').style.display='none'">✕</button>
+                    </div>
+                    <div class="output-content" id="output-content"></div>
+                </div>
+
+                <div class="action-bar">
+                    <div>
+                        <button class="btn-secondary" id="btn-skip" onclick="app.skipAlgorithm()">Skip</button>
+                        <button class="btn-danger" id="btn-give-up" onclick="app.giveUp()" style="display: none;">Give Up</button>
+                    </div>
+                    <div class="flex-center">
+                        <button class="btn-secondary" id="btn-run" onclick="app.runCode()">Run Code</button>
+                        <button class="btn-success" id="btn-submit" disabled onclick="app.submitCode()">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blitz Results View -->
+    <div id="view-blitz-results" class="view">
+        <div class="container card" style="margin-top: 4rem; text-align: center;">
+            <h1 style="color: var(--accent); margin-bottom: 2rem;">Blitz Complete!</h1>
+            <div class="flex-center" style="gap: 4rem; margin: 3rem 0; justify-content: space-evenly;">
+                <div>
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;">Solved</h3>
+                    <div id="blitz-res-solved" style="font-size: 3rem; color: var(--success); font-weight: 700;">0</div>
+                </div>
+                <div>
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;">Attempted</h3>
+                    <div id="blitz-res-attempted" style="font-size: 3rem; font-weight: 700;">0</div>
+                </div>
+                <div>
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;">Skipped</h3>
+                    <div id="blitz-res-skipped" style="font-size: 3rem; font-weight: 700; color: var(--error);">0</div>
+                </div>
+            </div>
+            <table id="blitz-breakdown-table" style="margin-bottom: 3rem;">
+                <thead>
+                    <tr><th>Algorithm</th><th>Result</th><th>Time Spent</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="flex-center">
+                <button class="btn-primary" onclick="app.showHome()">Return to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PB Results View -->
+    <div id="view-pb-results" class="view">
+        <div class="container card" style="margin-top: 4rem; text-align: center;">
+            <h1 id="pb-res-title" style="margin-bottom: 0.5rem;">Algorithm Title</h1>
+            
+            <div id="pb-new-record" style="display:none; color: var(--success); font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0; letter-spacing: -1px; text-shadow: 0 0 20px rgba(44, 187, 93, 0.4);">
+                NEW PB 🔥
+            </div>
+
+            <div class="flex-center" style="gap: 4rem; margin: 3rem 0; justify-content: space-evenly;">
+                <div>
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;">Your Time</h3>
+                    <div id="pb-res-time" style="font-size: 3rem; font-weight: 700; font-family: var(--font-mono);">00:00.000</div>
+                </div>
+                <div>
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;">Previous Best</h3>
+                    <div id="pb-res-prev" style="font-size: 3rem; font-weight: 700; font-family: var(--font-mono); color: var(--text-secondary);">--:--.---</div>
+                </div>
+            </div>
+            
+            <div style="text-align: left; margin-top: 3rem;">
+                <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">Attempt History</h3>
+                <table id="pb-history-table">
+                    <thead><tr><th>Date</th><th>Duration</th><th>Result</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div class="flex-center" style="margin-top: 3rem; gap: 1.5rem;">
+                <button class="btn-secondary" onclick="app.startPractice(true)" style="padding: 12px 24px;">Try Again</button>
+                <button class="btn-primary" onclick="app.showHome()" style="padding: 12px 24px;">Return to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History View -->
+    <div id="view-history" class="view">
+        <div class="navbar">
+            <div class="nav-brand" onclick="app.showHome()">Algo<span>Rep</span></div>
+            <button class="btn-secondary" style="padding: 6px 16px;" onclick="app.showHome()">Back</button>
+        </div>
+        <div class="container" style="max-width: 1000px;">
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 style="margin-bottom: 1.5rem; color: var(--accent);">Personal Bests</h2>
+                <table id="history-pb-table">
+                    <thead><tr><th>Algorithm</th><th>Best Time</th><th>Attempts</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: 1.5rem;">Recent Attempts</h2>
+                <table id="history-all-table">
+                    <thead><tr><th>Date</th><th>Algorithm</th><th>Mode</th><th>Duration</th><th>Result</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Algorithm View -->
+    <div id="view-add" class="view">
+        <div class="navbar">
+            <div class="nav-brand" onclick="app.showHome()">Algo<span>Rep</span></div>
+            <button class="btn-secondary" style="padding: 6px 16px;" onclick="app.showHome()">Cancel</button>
+        </div>
+        <div class="container card" style="max-width: 800px;">
+            <h2 style="margin-bottom: 2rem;">Add Custom Algorithm</h2>
+            
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary); font-weight:600;">Unique ID</label>
+            <input type="text" id="add-id" placeholder="e.g. my_algo_1">
+            
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary); font-weight:600;">Title</label>
+            <input type="text" id="add-title" placeholder="e.g. Reverse Linked List">
+            
+            <div class="flex-between" style="gap: 1.5rem;">
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary); font-weight:600;">Difficulty</label>
+                    <select id="add-difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div style="flex:2;">
+                    <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary); font-weight:600;">Tags (comma separated)</label>
+                    <input type="text" id="add-tags" placeholder="e.g. linked-list, recursion">
+                </div>
+            </div>
+
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-secondary); font-weight:600;">Python Stub</label>
+            <textarea id="add-stub" rows="6" style="font-family: var(--font-mono);"></textarea>
+
+            <div style="margin-top: 1.5rem;">
+                <div class="flex-between" style="margin-bottom: 1rem;">
+                    <label style="color:var(--text-secondary); font-weight:600;">Test Cases</label>
+                    <button class="btn-secondary" onclick="app.addTestCaseField()" style="padding: 6px 12px; font-size: 0.85rem;">+ Add Test Case</button>
+                </div>
+                <div id="add-testcases-container">
+                    <!-- dynamic -->
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <button class="btn-primary" onclick="app.saveCustomAlgorithm()" style="width: 100%; padding: 14px; font-size: 1.1rem;">Save Algorithm</button>
+            </div>
+            
+            <div style="margin-top: 1.5rem; background: var(--bg-base); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); display: none;" id="add-json-output-container">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">To permanently add to <code style="color:var(--accent);">algorithms.json</code>, copy this JSON:</p>
+                <textarea id="add-json-output" rows="6" readonly style="font-family: var(--font-mono); font-size: 0.85rem; background: transparent; border: none; padding: 0;"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fallback algorithms in case local fetch fails (e.g., opened via file:// without server)
+        const fallbackAlgorithms = [
+            {
+                "id": "bfs",
+                "title": "Implement BFS",
+                "stub": "from collections import deque\n\nclass Solution:\n    def bfs(self, graph: dict, start: int) -> list[int]:\n        # your code here\n        pass",
+                "test_cases": [
+                {"call": "Solution().bfs({0:[1,2],1:[3],2:[3],3:[]}, 0)", "expected": "[0, 1, 2, 3]"},
+                {"call": "Solution().bfs({1: [2, 3], 2: [4], 3: [4], 4: []}, 1)", "expected": "[1, 2, 3, 4]"}
+                ],
+                "tags": ["graph", "traversal"],
+                "difficulty": "easy"
+            },
+            {
+                "id": "two_pointers_sum",
+                "title": "Two Pointers (Sorted Pair Sum)",
+                "stub": "class Solution:\n    def twoSum(self, numbers: list[int], target: int) -> list[int]:\n        # return 1-indexed positions\n        # your code here\n        pass",
+                "test_cases": [
+                {"call": "Solution().twoSum([2,7,11,15], 9)", "expected": "[1, 2]"},
+                {"call": "Solution().twoSum([2,3,4], 6)", "expected": "[1, 3]"}
+                ],
+                "tags": ["array", "two-pointers"],
+                "difficulty": "easy"
+            }
+        ];
+
+        const app = {
+            pyodide: null,
+            editor: null,
+            algorithms: [],
+            currentAlgo: null,
+            mode: null, // 'blitz' or 'pb'
+            
+            timerInterval: null,
+            startTime: null,
+            elapsedMs: 0,
+            blitzTimeLimitMs: 0,
+            blitzQueue: [],
+            blitzResults: [],
+            
+            attempts: JSON.parse(localStorage.getItem('algorep_attempts') || '[]'),
+            personalBests: JSON.parse(localStorage.getItem('algorep_personal_bests') || '{}'),
+            customAlgos: JSON.parse(localStorage.getItem('algorep_custom_algorithms') || '[]'),
+
+            async init() {
+                // Initialize CodeMirror immediately so we can reference it
+                this.editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+                    mode: "python",
+                    theme: "monokai",
+                    lineNumbers: true,
+                    indentUnit: 4,
+                    matchBrackets: true,
+                    autoCloseBrackets: true,
+                    viewportMargin: Infinity
+                });
+
+                // Load Data
+                try {
+                    const res = await fetch('./algorithms.json');
+                    if(res.ok) {
+                        const data = await res.json();
+                        this.algorithms = [...data, ...this.customAlgos];
+                    } else {
+                        console.warn("Fetch failed, using fallback algorithms.");
+                        this.algorithms = [...fallbackAlgorithms, ...this.customAlgos];
+                    }
+                } catch(e) {
+                    console.warn("Fetch error (likely CORS/file://), using fallback algorithms.", e);
+                    this.algorithms = [...fallbackAlgorithms, ...this.customAlgos];
+                }
+
+                // Populate PB Select
+                const pbSelect = document.getElementById('pb-select');
+                pbSelect.innerHTML = this.algorithms.map(a => `<option value="${a.id}">${a.title} (${a.difficulty.toUpperCase()})</option>`).join('');
+
+                // Load Pyodide
+                try {
+                    this.pyodide = await loadPyodide();
+                    document.getElementById('loading-overlay').style.display = 'none';
+                } catch (err) {
+                    console.error(err);
+                    document.getElementById('loading-message').innerText = "Failed to load Python. Please check your internet connection and refresh.";
+                    document.getElementById('loading-message').style.color = "var(--error)";
+                    document.getElementById('loading-spinner').style.display = 'none';
+                    return; // Stop initialization
+                }
+                
+                this.updateHomeStats();
+                this.showHome();
+            },
+
+            hideAllViews() { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); },
+            showView(id) { 
+                this.hideAllViews(); 
+                document.getElementById(id).classList.add('active'); 
+            },
+            showHome() {
+                this.cleanupPractice();
+                this.updateHomeStats();
+                this.showView('view-home');
+            },
+            showModeSelect(mode) {
+                this.mode = mode;
+                document.getElementById('mode-title').innerText = mode === 'blitz' ? 'Blitz Mode Setup' : 'Personal Best Setup';
+                document.getElementById('blitz-config').style.display = mode === 'blitz' ? 'block' : 'none';
+                document.getElementById('pb-config').style.display = mode === 'pb' ? 'block' : 'none';
+                this.showView('view-mode-select');
+            },
+            showHistory() { this.renderHistory(); this.showView('view-history'); },
+            showAddAlgo() { this.addTestCaseField(); this.showView('view-add'); },
+
+            updateHomeStats() {
+                document.getElementById('stat-attempts').innerText = this.attempts.length;
+                const passed = this.attempts.filter(a => a.passed).length;
+                const rate = this.attempts.length ? Math.round((passed / this.attempts.length) * 100) : 0;
+                document.getElementById('stat-passrate').innerText = `${rate}%`;
+                document.getElementById('stat-mastered').innerText = Object.keys(this.personalBests).length;
+            },
+
+            shufflePB() {
+                if(!this.algorithms.length) return;
+                const rand = this.algorithms[Math.floor(Math.random() * this.algorithms.length)];
+                document.getElementById('pb-select').value = rand.id;
+            },
+            
+            startPractice(isRetry = false) {
+                if(this.mode === 'blitz' && !isRetry) {
+                    const mins = parseInt(document.getElementById('blitz-minutes').value) || 10;
+                    this.blitzTimeLimitMs = mins * 60 * 1000;
+                    const tag = document.getElementById('blitz-tag').value.toLowerCase().trim();
+                    
+                    let pool = this.algorithms;
+                    if(tag) pool = pool.filter(a => a.tags && a.tags.some(t => t.toLowerCase().includes(tag)));
+                    
+                    this.blitzQueue = [...pool].sort(() => Math.random() - 0.5);
+                    this.blitzResults = [];
+                    
+                    if(this.blitzQueue.length === 0) {
+                        alert("No algorithms match the given tags.");
+                        return;
+                    }
+                    this.elapsedMs = 0; 
+                    this.startTime = Date.now();
+                } else if(this.mode === 'pb' && !isRetry) {
+                    const id = document.getElementById('pb-select').value;
+                    this.currentAlgo = this.algorithms.find(a => a.id === id);
+                }
+
+                if(this.mode === 'blitz') {
+                    if(this.blitzQueue.length === 0) {
+                        this.endBlitz();
+                        return;
+                    }
+                    this.currentAlgo = this.blitzQueue.shift();
+                }
+
+                this.setupPracticeUI();
+                this.showView('view-practice');
+                
+                // Extremely important: Force CodeMirror to redraw when it becomes visible inside the flex container
+                setTimeout(() => {
+                    this.editor.refresh();
+                }, 50);
+                
+                if(this.mode === 'pb') {
+                    this.elapsedMs = 0;
+                    this.startTime = Date.now();
+                }
+
+                clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => this.tickTimer(), 100);
+            },
+            
+            setupPracticeUI() {
+                const a = this.currentAlgo;
+                document.getElementById('practice-title').innerText = a.title;
+                const badge = document.getElementById('practice-badge');
+                badge.innerText = a.difficulty;
+                badge.className = `badge ${a.difficulty}`;
+                
+                document.getElementById('practice-mode-indicator').innerText = this.mode === 'blitz' ? 'Blitz Mode' : 'Personal Best Mode';
+                
+                if(this.mode === 'blitz') {
+                    document.getElementById('btn-skip').style.display = 'inline-block';
+                    document.getElementById('btn-give-up').style.display = 'none';
+                    document.getElementById('practice-score').innerText = `${this.blitzResults.filter(r=>r.passed).length} Solved`;
+                } else {
+                    document.getElementById('btn-skip').style.display = 'none';
+                    document.getElementById('btn-give-up').style.display = 'inline-block';
+                    document.getElementById('practice-score').innerText = '';
+                }
+
+                let descHtml = ``;
+                a.test_cases.forEach((tc, i) => {
+                    descHtml += `<h4 style="margin: 20px 0 10px 0;">Example ${i+1}:</h4><pre><strong>Input:</strong> ${tc.call}\n<strong>Output:</strong> ${tc.expected}</pre>`;
+                });
+                if(a.tags && a.tags.length) {
+                    descHtml += `<div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1rem;"><strong style="color: var(--text-secondary);">Tags:</strong><div style="margin-top: 8px;">${a.tags.map(t => `<span class="badge" style="background:var(--bg-layer-2); color:var(--text-primary); border: 1px solid var(--border-color); margin-right: 6px;">${t}</span>`).join('')}</div></div>`;
+                }
+                document.getElementById('problem-desc-content').innerHTML = descHtml;
+
+                this.editor.setValue(a.stub);
+                document.getElementById('output-panel').style.display = 'none';
+                document.getElementById('btn-submit').disabled = true;
+                
+                // Change run button state
+                const btnRun = document.getElementById('btn-run');
+                btnRun.innerText = 'Run Code';
+                btnRun.disabled = false;
+            },
+            
+            tickTimer() {
+                if(this.mode === 'blitz') {
+                    const totalElapsed = Date.now() - this.startTime;
+                    const rem = Math.max(0, this.blitzTimeLimitMs - totalElapsed);
+                    document.getElementById('practice-timer').innerText = this.formatTime(rem);
+                    if(rem === 0) {
+                        this.endBlitz();
+                    }
+                } else {
+                    this.elapsedMs = Date.now() - this.startTime;
+                    document.getElementById('practice-timer').innerText = this.formatTime(this.elapsedMs);
+                }
+            },
+            
+            formatTime(ms) {
+                const mins = Math.floor(ms / 60000);
+                const secs = Math.floor((ms % 60000) / 1000);
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            },
+            
+            cleanupPractice() { clearInterval(this.timerInterval); },
+
+            async runCode() {
+                const userCode = this.editor.getValue();
+                const a = this.currentAlgo;
+                const panel = document.getElementById('output-panel');
+                const content = document.getElementById('output-content');
+                const btnRun = document.getElementById('btn-run');
+                
+                panel.style.display = 'flex';
+                content.innerHTML = '<div style="color: var(--text-secondary); display:flex; align-items:center; gap: 10px;"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div> Executing...</div>';
+                document.getElementById('btn-submit').disabled = true;
+                btnRun.disabled = true;
+
+                // Safely pass code and test cases to Python globals to avoid JS string interpolation vulnerabilities
+                this.pyodide.globals.set("user_code", userCode);
+                this.pyodide.globals.set("test_cases_json", JSON.stringify(a.test_cases));
+
+                let pyCode = `
+import sys, io, json
+
+__out = io.StringIO()
+__err = io.StringIO()
+sys.stdout = __out
+sys.stderr = __err
+
+__global_scope = {}
+__exec_error = None
+__results = []
+
+try:
+    exec(user_code, __global_scope)
+except Exception as e:
+    __exec_error = str(e)
+
+if not __exec_error:
+    tc_list = json.loads(test_cases_json)
+    for tc in tc_list:
+        try:
+            res = eval(tc["call"], __global_scope)
+            passed = (str(res) == tc["expected"])
+            __results.append({
+                "pass": passed,
+                "actual": str(res),
+                "expected": tc["expected"],
+                "error": None
+            })
+        except Exception as e:
+            __results.append({
+                "pass": False,
+                "actual": None,
+                "expected": tc["expected"],
+                "error": str(e)
+            })
+
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+
+json.dumps({
+    "stdout": __out.getvalue(),
+    "stderr": __err.getvalue(),
+    "exec_error": __exec_error,
+    "results": __results
+})
+`;
+                try {
+                    const resultJson = await this.pyodide.runPythonAsync(pyCode);
+                    const res = JSON.parse(resultJson);
+                    this.renderOutput(res);
+                } catch(e) {
+                    content.innerHTML = `<div class="text-red"><strong>Pyodide Error:</strong><br>${e.message}</div>`;
+                } finally {
+                    btnRun.disabled = false;
+                }
+            },
+            
+            renderOutput(res) {
+                const content = document.getElementById('output-content');
+                let html = '';
+
+                if(res.exec_error) {
+                    html += `<div class="text-red" style="margin-bottom: 1.5rem; background: rgba(239,71,67,0.1); padding: 15px; border-radius: 6px; border: 1px solid rgba(239,71,67,0.2);">
+                        <strong style="display:block; margin-bottom: 8px;">Execution Error:</strong>
+                        <pre style="font-family: var(--font-mono); margin:0;">${res.exec_error}</pre>
+                    </div>`;
+                }
+                
+                if(res.stdout) {
+                    html += `<div style="margin-bottom: 1.5rem;">
+                        <strong style="color: var(--text-secondary); display:block; margin-bottom: 8px;">stdout:</strong>
+                        <pre style="background: var(--bg-base); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); color: #d4d4d4;">${res.stdout}</pre>
+                    </div>`;
+                }
+                if(res.stderr) {
+                    html += `<div style="margin-bottom: 1.5rem;">
+                        <strong style="color: var(--error); display:block; margin-bottom: 8px;">stderr:</strong>
+                        <pre style="background: rgba(239,71,67,0.1); padding: 12px; border-radius: 6px; border: 1px solid rgba(239,71,67,0.2); color: var(--error);">${res.stderr}</pre>
+                    </div>`;
+                }
+
+                if(res.results && res.results.length > 0) {
+                    let allPass = true;
+                    html += `<strong style="color: var(--text-secondary); display:block; margin-bottom: 12px;">Test Cases:</strong>`;
+                    res.results.forEach((tc, i) => {
+                        const call = this.currentAlgo.test_cases[i].call;
+                        if(tc.pass) {
+                            html += `<div style="margin-bottom: 10px; padding: 12px 16px; border-radius: 6px; border-left: 4px solid var(--success); background: rgba(44,187,93,0.08);">
+                                <span class="text-green" style="font-weight: 600; margin-right: 10px;">✅ Passed</span> <code style="color: #d4d4d4;">${call}</code>
+                            </div>`;
+                        } else {
+                            allPass = false;
+                            html += `<div style="margin-bottom: 10px; padding: 12px 16px; border-radius: 6px; border-left: 4px solid var(--error); background: rgba(239,71,67,0.08);">
+                                <div style="margin-bottom: 8px;"><span class="text-red" style="font-weight: 600; margin-right: 10px;">❌ Failed</span> <code style="color: #d4d4d4;">${call}</code></div>
+                                ${tc.error ? `<div class="text-red" style="margin-top: 8px; font-size: 0.85rem;">Error: ${tc.error}</div>` : 
+                                `<div style="display:flex; gap: 20px; font-size: 0.85rem; margin-top: 8px;">
+                                    <div><span style="color: var(--text-secondary);">Expected:</span> <code style="color: var(--success);">${tc.expected}</code></div>
+                                    <div><span style="color: var(--text-secondary);">Actual:</span> <code style="color: var(--error);">${tc.actual}</code></div>
+                                </div>`}
+                            </div>`;
+                        }
+                    });
+
+                    if(allPass) {
+                        html = `<div style="background: rgba(44,187,93,0.15); border: 1px solid rgba(44,187,93,0.3); padding: 12px; border-radius: 6px; color: var(--success); text-align: center; font-weight: 700; font-size: 1.1rem; margin-bottom: 1.5rem; display: flex; justify-content: center; align-items: center; gap: 10px;">🎉 All Tests Passed!</div>` + html;
+                        document.getElementById('btn-submit').disabled = false;
+                    }
+                }
+                
+                content.innerHTML = html;
+            },
+
+            skipAlgorithm() {
+                const prevTime = this.blitzResults.reduce((sum, r) => sum + r.time_taken_ms, 0);
+                const overallElapsed = Date.now() - this.startTime;
+                const timeSpent = overallElapsed - prevTime;
+
+                this.saveRecord(false, timeSpent);
+                this.blitzResults.push({ id: this.currentAlgo.id, title: this.currentAlgo.title, passed: false, time_taken_ms: timeSpent, skipped: true });
+                this.startPractice(); 
+            },
+            
+            giveUp() { this.cleanupPractice(); this.showHome(); },
+            
+            submitCode() {
+                if(this.mode === 'pb') {
+                    this.cleanupPractice();
+                    this.saveRecord(true, this.elapsedMs);
+                    this.showPBResults(this.currentAlgo, this.elapsedMs);
+                } else {
+                    const prevTime = this.blitzResults.reduce((sum, r) => sum + r.time_taken_ms, 0);
+                    const overallElapsed = Date.now() - this.startTime;
+                    const timeSpent = overallElapsed - prevTime;
+                    
+                    this.saveRecord(true, timeSpent);
+                    this.blitzResults.push({ id: this.currentAlgo.id, title: this.currentAlgo.title, passed: true, time_taken_ms: timeSpent, skipped: false });
+                    this.startPractice();
+                }
+            },
+            
+            endBlitz() {
+                this.cleanupPractice();
+                const solved = this.blitzResults.filter(r => r.passed).length;
+                const skipped = this.blitzResults.filter(r => r.skipped).length;
+                
+                document.getElementById('blitz-res-solved').innerText = solved;
+                document.getElementById('blitz-res-attempted').innerText = this.blitzResults.length;
+                document.getElementById('blitz-res-skipped').innerText = skipped;
+
+                const tbody = document.querySelector('#blitz-breakdown-table tbody');
+                tbody.innerHTML = this.blitzResults.map(r => {
+                    const resHtml = r.passed ? '<span class="text-green" style="font-weight:600;">Solved</span>' : '<span class="text-red" style="font-weight:600;">Skipped/Failed</span>';
+                    return `<tr><td>${r.title}</td><td>${resHtml}</td><td style="font-family: var(--font-mono);">${this.formatTime(r.time_taken_ms)}</td></tr>`;
+                }).join('');
+
+                this.showView('view-blitz-results');
+            },
+            
+            showPBResults(algo, timeMs) {
+                document.getElementById('pb-res-title').innerText = algo.title;
+                document.getElementById('pb-res-time').innerText = this.formatTime(timeMs);
+                
+                const best = this.personalBests[algo.id];
+                const isNewPB = !best || timeMs <= best.best_time_ms;
+                
+                document.getElementById('pb-new-record').style.display = isNewPB ? 'block' : 'none';
+                
+                if(best && !isNewPB) {
+                    document.getElementById('pb-res-prev').innerText = this.formatTime(best.best_time_ms);
+                } else if(best && isNewPB) {
+                     const prevAttempts = this.attempts.filter(a => a.algorithm_id === algo.id && a.passed).sort((a,b) => a.time_taken_ms - b.time_taken_ms);
+                     const prev = prevAttempts.length > 1 ? prevAttempts[1].time_taken_ms : timeMs;
+                     document.getElementById('pb-res-prev').innerText = prevAttempts.length > 1 ? this.formatTime(prev) : '--:--.---';
+                } else {
+                    document.getElementById('pb-res-prev').innerText = '--:--.---';
+                }
+
+                const tbody = document.querySelector('#pb-history-table tbody');
+                const history = this.attempts.filter(a => a.algorithm_id === algo.id).sort((a,b) => b.timestamp - a.timestamp);
+                tbody.innerHTML = history.map(h => `
+                    <tr>
+                        <td>${new Date(h.timestamp).toLocaleString()}</td>
+                        <td style="font-family: var(--font-mono);">${this.formatTime(h.time_taken_ms)}</td>
+                        <td>${h.passed ? '<span class="text-green" style="font-weight:600;">Pass</span>' : '<span class="text-red" style="font-weight:600;">Fail</span>'}</td>
+                    </tr>
+                `).join('');
+
+                this.showView('view-pb-results');
+            },
+
+            saveRecord(passed, timeMs) {
+                const record = {
+                    id: Date.now().toString(),
+                    algorithm_id: this.currentAlgo.id,
+                    title: this.currentAlgo.title,
+                    timestamp: Date.now(),
+                    time_taken_ms: timeMs,
+                    passed: passed,
+                    mode: this.mode
+                };
+                this.attempts.push(record);
+                localStorage.setItem('algorep_attempts', JSON.stringify(this.attempts));
+
+                if(passed) {
+                    const currentBest = this.personalBests[this.currentAlgo.id];
+                    if(!currentBest || timeMs < currentBest.best_time_ms) {
+                        this.personalBests[this.currentAlgo.id] = {
+                            best_time_ms: timeMs,
+                            attempt_count: currentBest ? currentBest.attempt_count + 1 : 1,
+                            first_passed_at: currentBest ? currentBest.first_passed_at : Date.now()
+                        };
+                    } else {
+                        currentBest.attempt_count += 1;
+                    }
+                    localStorage.setItem('algorep_personal_bests', JSON.stringify(this.personalBests));
+                }
+            },
+            
+            renderHistory() {
+                const pbTbody = document.querySelector('#history-pb-table tbody');
+                const pbEntries = Object.entries(this.personalBests).map(([id, data]) => {
+                    const algo = this.algorithms.find(a => a.id === id);
+                    return { title: algo ? algo.title : id, ...data };
+                }).sort((a,b) => a.best_time_ms - b.best_time_ms);
+
+                pbTbody.innerHTML = pbEntries.length ? pbEntries.map(p => `
+                    <tr><td style="font-weight:600;">${p.title}</td><td class="text-green" style="font-family: var(--font-mono); font-weight: 700;">${this.formatTime(p.best_time_ms)}</td><td>${p.attempt_count}</td></tr>
+                `).join('') : '<tr><td colspan="3" style="text-align:center; color:var(--text-secondary); padding: 2rem;">No personal bests achieved yet. Start practicing!</td></tr>';
+
+                const allTbody = document.querySelector('#history-all-table tbody');
+                const sortedAttempts = [...this.attempts].sort((a,b) => b.timestamp - a.timestamp);
+                allTbody.innerHTML = sortedAttempts.length ? sortedAttempts.map(a => `
+                    <tr>
+                        <td>${new Date(a.timestamp).toLocaleDateString()}</td>
+                        <td style="font-weight:500;">${a.title}</td>
+                        <td style="text-transform: capitalize;">${a.mode}</td>
+                        <td style="font-family: var(--font-mono);">${this.formatTime(a.time_taken_ms)}</td>
+                        <td>${a.passed ? '<span class="text-green" style="font-weight:600;">Pass</span>' : '<span class="text-red" style="font-weight:600;">Fail</span>'}</td>
+                    </tr>
+                `).join('') : '<tr><td colspan="5" style="text-align:center; color:var(--text-secondary); padding: 2rem;">No attempts recorded yet.</td></tr>';
+            },
+
+            addTestCaseField() {
+                const container = document.getElementById('add-testcases-container');
+                const div = document.createElement('div');
+                div.className = 'flex-between';
+                div.style.gap = '10px';
+                div.style.marginBottom = '10px';
+                div.innerHTML = `
+                    <input type="text" placeholder="Call (e.g. Solution().solve(1))" class="tc-call" style="flex: 2; margin: 0; font-family: var(--font-mono);">
+                    <input type="text" placeholder="Expected String (e.g. '[1, 2]')" class="tc-expected" style="flex: 1; margin: 0; font-family: var(--font-mono);">
+                    <button class="btn-danger" onclick="this.parentElement.remove()" style="padding: 12px; border-radius: 6px;">✕</button>
+                `;
+                container.appendChild(div);
+            },
+            
+            saveCustomAlgorithm() {
+                const id = document.getElementById('add-id').value.trim();
+                const title = document.getElementById('add-title').value.trim();
+                if(!id || !title) return alert("ID and Title are required.");
+                if(this.algorithms.some(a => a.id === id)) return alert("An algorithm with this ID already exists.");
+
+                const difficulty = document.getElementById('add-difficulty').value;
+                const tags = document.getElementById('add-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+                const stub = document.getElementById('add-stub').value;
+
+                const test_cases = [];
+                document.querySelectorAll('#add-testcases-container > div').forEach(div => {
+                    const call = div.querySelector('.tc-call').value.trim();
+                    const expected = div.querySelector('.tc-expected').value.trim();
+                    if(call && expected) test_cases.push({ call, expected });
+                });
+
+                if(!test_cases.length) return alert("At least one complete test case is required.");
+
+                const obj = { id, title, stub, test_cases, tags, difficulty };
+                
+                this.customAlgos.push(obj);
+                localStorage.setItem('algorep_custom_algorithms', JSON.stringify(this.customAlgos));
+                
+                this.algorithms.push(obj);
+                
+                const jsonContainer = document.getElementById('add-json-output-container');
+                const jsonOutput = document.getElementById('add-json-output');
+                jsonOutput.value = JSON.stringify(obj, null, 2);
+                jsonContainer.style.display = 'block';
+
+                alert("Algorithm added successfully! It is now available to practice.");
+                
+                document.getElementById('add-id').value = '';
+                document.getElementById('add-title').value = '';
+                document.getElementById('add-stub').value = '';
+                document.getElementById('add-tags').value = '';
+                document.getElementById('add-testcases-container').innerHTML = '';
+                this.addTestCaseField();
+                
+                const pbSelect = document.getElementById('pb-select');
+                pbSelect.innerHTML += `<option value="${obj.id}">${obj.title} (${obj.difficulty.toUpperCase()})</option>`;
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // ensure initial UI state before init logic handles the heavy lifting
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            app.init();
+        });
+    </script>
+</body>
+</html>

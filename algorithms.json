@@ -1,0 +1,172 @@
+[
+  {
+    "id": "bfs",
+    "title": "Implement BFS",
+    "stub": "from collections import deque\n\nclass Solution:\n    def bfs(self, graph: dict, start: int) -> list[int]:\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().bfs({0:[1,2],1:[3],2:[3],3:[]}, 0)",
+        "expected": "[0, 1, 2, 3]"
+      },
+      {
+        "call": "Solution().bfs({1: [2, 3], 2: [4], 3: [4], 4: []}, 1)",
+        "expected": "[1, 2, 3, 4]"
+      }
+    ],
+    "tags": ["graph", "traversal"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "dfs_iterative",
+    "title": "Implement DFS (Iterative)",
+    "stub": "class Solution:\n    def dfs(self, graph: dict, start: int) -> list[int]:\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().dfs({0:[2,1],1:[3],2:[3],3:[]}, 0)",
+        "expected": "[0, 1, 3, 2]"
+      },
+      {
+        "call": "Solution().dfs({1: [3, 2], 2: [4], 3: [4], 4: []}, 1)",
+        "expected": "[1, 2, 4, 3]"
+      }
+    ],
+    "tags": ["graph", "traversal"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "topological_sort",
+    "title": "Implement Topological Sort",
+    "stub": "from collections import deque\n\nclass Solution:\n    def topSort(self, numNodes: int, edges: list[list[int]]) -> list[int]:\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().topSort(4, [[1,0],[2,1],[3,2]])",
+        "expected": "[3, 2, 1, 0]"
+      },
+      {
+        "call": "Solution().topSort(3, [[1,0],[2,1]])",
+        "expected": "[2, 1, 0]"
+      }
+    ],
+    "tags": ["graph", "sorting"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "binary_search",
+    "title": "Implement Binary Search",
+    "stub": "class Solution:\n    def search(self, nums: list[int], target: int) -> int:\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().search([-1,0,3,5,9,12], 9)",
+        "expected": "4"
+      },
+      {
+        "call": "Solution().search([-1,0,3,5,9,12], 2)",
+        "expected": "-1"
+      }
+    ],
+    "tags": ["array", "search"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "merge_sort",
+    "title": "Implement Merge Sort",
+    "stub": "class Solution:\n    def sortArray(self, nums: list[int]) -> list[int]:\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().sortArray([5,2,3,1])",
+        "expected": "[1, 2, 3, 5]"
+      },
+      {
+        "call": "Solution().sortArray([5,1,1,2,0,0])",
+        "expected": "[0, 0, 1, 1, 2, 5]"
+      }
+    ],
+    "tags": ["array", "sorting", "divide-and-conquer"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "quickselect",
+    "title": "Quickselect (Kth Smallest)",
+    "stub": "class Solution:\n    def findKthSmallest(self, nums: list[int], k: int) -> int:\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().findKthSmallest([3,2,1,5,6,4], 2)",
+        "expected": "2"
+      },
+      {
+        "call": "Solution().findKthSmallest([3,2,3,1,2,4,5,5,6], 4)",
+        "expected": "3"
+      }
+    ],
+    "tags": ["array", "sorting", "divide-and-conquer"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "two_pointers_sum",
+    "title": "Two Pointers (Sorted Pair Sum)",
+    "stub": "class Solution:\n    def twoSum(self, numbers: list[int], target: int) -> list[int]:\n        # return 1-indexed positions\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().twoSum([2,7,11,15], 9)",
+        "expected": "[1, 2]"
+      },
+      {
+        "call": "Solution().twoSum([2,3,4], 6)",
+        "expected": "[1, 3]"
+      }
+    ],
+    "tags": ["array", "two-pointers"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "sliding_window_max",
+    "title": "Sliding Window (Max Sum Subarray)",
+    "stub": "class Solution:\n    def maxSum(self, nums: list[int], k: int) -> int:\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().maxSum([100, 200, 300, 400], 2)",
+        "expected": "700"
+      },
+      {
+        "call": "Solution().maxSum([1, 4, 2, 10, 2, 3, 1, 0, 20], 4)",
+        "expected": "24"
+      }
+    ],
+    "tags": ["array", "sliding-window"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "dijkstra",
+    "title": "Dijkstra's Shortest Path",
+    "stub": "import heapq\n\nclass Solution:\n    def shortestPath(self, n: int, edges: list[list[int]], src: int) -> dict[int, int]:\n        # edges is [u, v, weight]\n        # return dict of {node: shortest_dist_from_src}\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().shortestPath(5, [[0,1,10], [0,2,3], [1,3,2], [2,1,1], [2,3,8], [2,4,2], [3,4,7], [4,3,9]], 0)",
+        "expected": "{0: 0, 1: 4, 2: 3, 3: 6, 4: 5}"
+      },
+      {
+        "call": "Solution().shortestPath(3, [[0,1,1], [1,2,1]], 0)",
+        "expected": "{0: 0, 1: 1, 2: 2}"
+      }
+    ],
+    "tags": ["graph", "shortest-path"],
+    "difficulty": "hard"
+  },
+  {
+    "id": "union_find",
+    "title": "Union-Find (Path Compression)",
+    "stub": "class UnionFind:\n    def __init__(self, size: int):\n        # your code here\n        pass\n\n    def find(self, x: int) -> int:\n        # your code here\n        pass\n\n    def union(self, x: int, y: int) -> bool:\n        # return True if union was successful, False if already in same set\n        # your code here\n        pass\n\nclass Solution:\n    def countComponents(self, n: int, edges: list[list[int]]) -> int:\n        # use UnionFind above to count connected components\n        # your code here\n        pass",
+    "test_cases": [
+      {
+        "call": "Solution().countComponents(5, [[0,1],[1,2],[3,4]])",
+        "expected": "2"
+      },
+      {
+        "call": "Solution().countComponents(5, [[0,1],[1,2],[2,3],[3,4]])",
+        "expected": "1"
+      }
+    ],
+    "tags": ["graph", "union-find"],
+    "difficulty": "medium"
+  }
+]
