@@ -233,6 +233,7 @@
             <div class="flex-center" style="margin-bottom: 3rem; gap: 2rem;">
                 <button class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.2rem; background: var(--success); box-shadow: 0 4px 14px rgba(44, 187, 93, 0.3);" onclick="app.showProblemList()">📋 Problem Set</button>
                 <button class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.2rem;" onclick="app.showModeSelect('blitz')">⚡ Blitz Mode</button>
+                <button class="btn-secondary" style="padding: 1.2rem 3rem; font-size: 1.2rem; margin-top: 15px;" onclick="app.showPlaylists()">📂 Playlists</button>
                 <button class="btn-secondary" style="padding: 1.2rem 3rem; font-size: 1.2rem;" onclick="app.showModeSelect('pb')">⏱️ Personal Best</button>
             </div>
 
@@ -547,6 +548,9 @@
             blitzTimeLimitMs: 0,
             blitzQueue: [],
             blitzResults: [],
+            customPlaylists: [],
+            currentPlaylistId: null,
+            activePoolOverride: null,
             
             attempts: JSON.parse(localStorage.getItem('algorep_attempts') || '[]'),
             personalBests: JSON.parse(localStorage.getItem('algorep_personal_bests') || '{}'),
@@ -625,17 +629,212 @@
             },
             showHome() {
                 this.cleanupPractice();
+                this.activePoolOverride = null;
                 this.updateHomeStats();
                 this.showView('view-home');
             },
             
-            showProblemList() {
+            
+
+            // Playlists System
+            getSmartPlaylists() {
+                const solvedIds = Object.keys(this.personalBests);
+                const unsolved = this.algorithms.filter(a => !solvedIds.includes(a.id));
+                const solved = this.algorithms.filter(a => solvedIds.includes(a.id));
+                
+                const topics = {};
+                this.algorithms.forEach(a => {
+                    const topicMatch = a.id.match(/drill_\d+_(bs|bfs|dfs|dp|graph|tree|linked_list|stack|math|greedy|topo|union_find|trie|dijkstra|bellman|floyd|kruskal|prim)/);
+                    if (topicMatch) {
+                        const t = topicMatch[1].toUpperCase();
+                        if (!topics[t]) topics[t] = [];
+                        topics[t].push(a);
+                    }
+                });
+
+                const topicPlaylists = Object.keys(topics).map(t => ({
+                    id: 'topic_' + t,
+                    name: 'Topic: ' + t,
+                    isDynamic: true,
+                    algorithms: topics[t].map(a => a.id)
+                }));
+
+                return [
+                    { id: 'dyn_unsolved', name: 'Unsolved Problems', isDynamic: true, algorithms: unsolved.map(a => a.id) },
+                    { id: 'dyn_solved', name: 'Mastered Problems', isDynamic: true, algorithms: solved.map(a => a.id) },
+                    ...topicPlaylists
+                ];
+            },
+            
+            showPlaylists() {
+                this.renderPlaylists();
+                this.showView('view-playlists');
+            },
+
+            renderPlaylists() {
+                const container = document.getElementById('playlists-container');
+                const smart = this.getSmartPlaylists();
+                const custom = this.customPlaylists;
+                
+                let html = '<h3 style="color: var(--text-secondary); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Smart Playlists</h3>';
+                html += '<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 2rem;">';
+                smart.forEach(p => {
+                    html += `<div class="card" style="cursor: pointer; padding: 15px 25px; border: 1px solid var(--border-color); border-radius: 8px; flex: 1; min-width: 250px;" onclick="app.showPlaylistDetail('${p.id}')">
+                        <h3 style="margin: 0 0 10px 0;">${p.name}</h3>
+                        <span class="badge" style="background: var(--bg-layer-2); color: var(--text-secondary);">${p.algorithms.length} Problems</span>
+                    </div>`;
+                });
+                html += '</div>';
+
+                html += '<h3 style="color: var(--text-secondary); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Custom Playlists</h3>';
+                if(custom.length === 0) {
+                    html += '<p style="color: var(--text-secondary);">You haven\\'t created any custom playlists yet.</p>';
+                } else {
+                    html += '<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 2rem;">';
+                    custom.forEach(p => {
+                        html += `<div class="card" style="cursor: pointer; padding: 15px 25px; border: 1px solid var(--border-color); border-radius: 8px; flex: 1; min-width: 250px;" onclick="app.showPlaylistDetail('${p.id}')">
+                            <h3 style="margin: 0 0 10px 0;">${p.name}</h3>
+                            <span class="badge" style="background: var(--bg-layer-2); color: var(--text-secondary);">${p.algorithms.length} Problems</span>
+                        </div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                container.innerHTML = html;
+            },
+
+            showCreatePlaylistModal() {
+                const name = prompt("Enter a name for the new playlist:");
+                if(!name || !name.trim()) return;
+                const newPlaylist = {
+                    id: 'custom_' + Date.now(),
+                    name: name.trim(),
+                    isDynamic: false,
+                    algorithms: []
+                };
+                this.customPlaylists.push(newPlaylist);
+                this.saveCustomPlaylists();
+                this.renderPlaylists();
+                this.showPlaylistDetail(newPlaylist.id);
+            },
+
+            saveCustomPlaylists() {
+                localStorage.setItem('algo_playlists', JSON.stringify(this.customPlaylists));
+            },
+
+            showPlaylistDetail(id) {
+                this.currentPlaylistId = id;
+                const smart = this.getSmartPlaylists();
+                let p = smart.find(x => x.id === id) || this.customPlaylists.find(x => x.id === id);
+                if(!p) return;
+                
+                document.getElementById('playlist-detail-title').innerText = p.name;
+                document.getElementById('playlist-detail-desc').innerText = p.isDynamic ? "Dynamic smart playlist." : "Custom user playlist.";
+                
+                if(!p.isDynamic) {
+                    document.getElementById('playlist-management-actions').style.display = 'block';
+                } else {
+                    document.getElementById('playlist-management-actions').style.display = 'none';
+                }
+
+                this.renderPlaylistDetailAlgos();
+                this.showView('view-playlist-detail');
+            },
+
+            renderPlaylistDetailAlgos() {
+                const smart = this.getSmartPlaylists();
+                let p = smart.find(x => x.id === this.currentPlaylistId) || this.customPlaylists.find(x => x.id === this.currentPlaylistId);
+                
+                const tbody = document.querySelector('#playlist-algos-table tbody');
+                tbody.innerHTML = p.algorithms.map(algoId => {
+                    const a = this.algorithms.find(x => x.id === algoId);
+                    if(!a) return '';
+                    const isMastered = !!this.personalBests[a.id];
+                    const statusIcon = isMastered ? '<span class="text-green">✅</span>' : '<span style="color:var(--border-color);">⭕</span>';
+                    const actionBtn = p.isDynamic ? '' : `<button class="btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="app.removeAlgoFromPlaylist('${a.id}')">Remove</button>`;
+                    return `<tr>
+                        <td style="text-align:center;">${statusIcon}</td>
+                        <td style="font-weight:600; color:var(--text-primary);">${a.title}</td>
+                        <td><span class="badge ${a.difficulty}">${a.difficulty}</span></td>
+                        <td>${actionBtn}</td>
+                    </tr>`;
+                }).join('');
+            },
+
+            removeAlgoFromPlaylist(algoId) {
+                let p = this.customPlaylists.find(x => x.id === this.currentPlaylistId);
+                if(!p) return;
+                p.algorithms = p.algorithms.filter(id => id !== algoId);
+                this.saveCustomPlaylists();
+                this.renderPlaylistDetailAlgos();
+            },
+
+            deleteCurrentPlaylist() {
+                if(confirm("Delete this custom playlist?")) {
+                    this.customPlaylists = this.customPlaylists.filter(x => x.id !== this.currentPlaylistId);
+                    this.saveCustomPlaylists();
+                    this.showPlaylists();
+                }
+            },
+
+            showAddAlgoModal() {
+                document.getElementById('modal-add-algo').style.display = 'flex';
+                this.filterAddAlgo('');
+            },
+
+            filterAddAlgo(query) {
+                let p = this.customPlaylists.find(x => x.id === this.currentPlaylistId);
+                if(!p) return;
+                
+                let pool = this.activePoolOverride || this.algorithms;
+                if(query) {
+                    pool = pool.filter(a => a.title.toLowerCase().includes(query.toLowerCase()));
+                }
+                
+                const tbody = document.getElementById('add-algo-tbody');
+                tbody.innerHTML = pool.map(a => {
+                    const inPlaylist = p.algorithms.includes(a.id);
+                    const btn = inPlaylist 
+                        ? `<button class="btn-secondary" disabled style="padding: 4px 8px; font-size: 0.75rem;">Added</button>`
+                        : `<button class="btn-success" style="padding: 4px 8px; font-size: 0.75rem;" onclick="app.addAlgoToPlaylist('${a.id}')">Add</button>`;
+                    return `<tr>
+                        <td style="font-weight:600;">${a.title}</td>
+                        <td>${btn}</td>
+                    </tr>`;
+                }).join('');
+            },
+
+            addAlgoToPlaylist(algoId) {
+                let p = this.customPlaylists.find(x => x.id === this.currentPlaylistId);
+                if(!p) return;
+                if(!p.algorithms.includes(algoId)) {
+                    p.algorithms.push(algoId);
+                    this.saveCustomPlaylists();
+                    this.renderPlaylistDetailAlgos();
+                    this.filterAddAlgo(document.getElementById('add-algo-search').value);
+                }
+            },
+
+            practicePlaylist(mode) {
+                const smart = this.getSmartPlaylists();
+                let p = smart.find(x => x.id === this.currentPlaylistId) || this.customPlaylists.find(x => x.id === this.currentPlaylistId);
+                if(!p || p.algorithms.length === 0) {
+                    alert("This playlist is empty!");
+                    return;
+                }
+                
+                // Set the active pool override
+                this.activePoolOverride = this.algorithms.filter(a => p.algorithms.includes(a.id));
+                this.showModeSelect(mode);
+            },
+
+            
                 this.renderProblemList();
                 this.showView('view-problems');
             },
             renderProblemList(query = '') {
                 const tbody = document.querySelector('#problem-list-table tbody');
-                let pool = this.algorithms;
+                let pool = this.activePoolOverride || this.algorithms;
                 if(query) {
                     pool = pool.filter(a => a.title.toLowerCase().includes(query.toLowerCase()) || 
                                           (a.tags && a.tags.join(' ').toLowerCase().includes(query.toLowerCase())));
@@ -705,7 +904,7 @@
                     this.blitzTimeLimitMs = mins * 60 * 1000;
                     const tag = document.getElementById('blitz-tag').value.toLowerCase().trim();
                     
-                    let pool = this.algorithms;
+                    let pool = this.activePoolOverride || this.algorithms;
                     if(tag) pool = pool.filter(a => a.tags && a.tags.some(t => t.toLowerCase().includes(tag)) || a.title.toLowerCase().includes(tag));
                     
                     this.blitzQueue = [...pool].sort(() => Math.random() - 0.5);
@@ -981,11 +1180,13 @@ json.dumps({
                 this.startPractice(); 
             },
             
-            giveUp() { this.cleanupPractice(); this.showHome(); },
+            giveUp() { this.cleanupPractice();
+                this.activePoolOverride = null; this.showHome(); },
             
             submitCode() {
                 if(this.mode === 'pb') {
                     this.cleanupPractice();
+                this.activePoolOverride = null;
                     this.saveRecord(true, this.elapsedMs);
                     this.showPBResults(this.currentAlgo, this.elapsedMs);
                 } else {
@@ -1001,6 +1202,7 @@ json.dumps({
             
             endBlitz() {
                 this.cleanupPractice();
+                this.activePoolOverride = null;
                 const solved = this.blitzResults.filter(r => r.passed).length;
                 const skipped = this.blitzResults.filter(r => r.skipped).length;
                 
