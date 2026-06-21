@@ -704,19 +704,41 @@
                 const unsolved = this.algorithms.filter(a => !solvedIds.includes(a.id));
                 const solved = this.algorithms.filter(a => solvedIds.includes(a.id));
                 
+                const topicMapping = {
+                    'bs': 'Binary Search',
+                    'bfs': 'BFS & DFS',
+                    'dfs': 'BFS & DFS',
+                    'dp': 'Dynamic Programming',
+                    'graph': 'Graphs',
+                    'dijkstra': 'Graphs',
+                    'bellman': 'Graphs',
+                    'floyd': 'Graphs',
+                    'kruskal': 'Graphs',
+                    'prim': 'Graphs',
+                    'topo': 'Graphs',
+                    'union_find': 'Graphs',
+                    'tree': 'Trees & Tries',
+                    'trie': 'Trees & Tries',
+                    'linked_list': 'Linked Lists',
+                    'stack': 'Stacks & Queues',
+                    'math': 'Math & Greedy',
+                    'greedy': 'Math & Greedy'
+                };
+
                 const topics = {};
                 this.algorithms.forEach(a => {
                     const topicMatch = a.id.match(/drill_\d+_(bs|bfs|dfs|dp|graph|tree|linked_list|stack|math|greedy|topo|union_find|trie|dijkstra|bellman|floyd|kruskal|prim)/);
                     if (topicMatch) {
-                        const t = topicMatch[1].toUpperCase();
+                        const raw = topicMatch[1].toLowerCase();
+                        const t = topicMapping[raw] || raw.toUpperCase();
                         if (!topics[t]) topics[t] = [];
                         topics[t].push(a);
                     }
                 });
 
                 const topicPlaylists = Object.keys(topics).map(t => ({
-                    id: 'topic_' + t,
-                    name: 'Topic: ' + t,
+                    id: 'topic_' + t.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
+                    name: t,
                     isDynamic: true,
                     algorithms: topics[t].map(a => a.id)
                 }));
