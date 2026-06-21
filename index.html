@@ -284,6 +284,67 @@
         </div>
     </div>
 
+    <!-- Playlists View -->
+    <div id="view-playlists" class="view">
+        <div class="navbar">
+            <div class="nav-brand" onclick="app.showHome()">Algo<span>Rep</span></div>
+            <button class="btn-secondary" style="padding: 6px 16px;" onclick="app.showHome()">Back</button>
+        </div>
+        <div class="container" style="margin-top: 2rem;">
+            <div class="flex-between" style="margin-bottom: 2rem;">
+                <h1 style="color: var(--text-primary); font-size: 2rem;">Playlists</h1>
+                <button class="btn-primary" onclick="app.showCreatePlaylistModal()">+ New Custom Playlist</button>
+            </div>
+            <div id="playlists-container"></div>
+        </div>
+    </div>
+
+    <!-- Playlist Detail View -->
+    <div id="view-playlist-detail" class="view">
+        <div class="navbar">
+            <div class="nav-brand" onclick="app.showHome()">Algo<span>Rep</span></div>
+            <button class="btn-secondary" style="padding: 6px 16px;" onclick="app.showPlaylists()">Back to Playlists</button>
+        </div>
+        <div class="container" style="margin-top: 2rem;">
+            <div class="flex-between" style="margin-bottom: 1rem;">
+                <h1 id="playlist-detail-title" style="color: var(--text-primary); font-size: 2rem;">Playlist Name</h1>
+                <div class="flex-center" style="gap: 10px;">
+                    <button class="btn-secondary" onclick="app.practicePlaylist('pb')">PB Practice</button>
+                    <button class="btn-primary" onclick="app.practicePlaylist('blitz')">⚡ Blitz Practice</button>
+                </div>
+            </div>
+            <p id="playlist-detail-desc" style="color: var(--text-secondary); margin-bottom: 2rem;"></p>
+            
+            <div id="playlist-management-actions" style="margin-bottom: 1rem; display: none;">
+                <button class="btn-secondary" style="padding: 4px 12px; font-size: 0.85rem;" onclick="app.showAddAlgoModal()">+ Add Problems</button>
+                <button class="btn-danger" style="padding: 4px 12px; font-size: 0.85rem;" onclick="app.deleteCurrentPlaylist()">Delete Playlist</button>
+            </div>
+
+            <table id="playlist-algos-table">
+                <thead>
+                    <tr><th>Status</th><th>Algorithm</th><th>Difficulty</th><th>Action</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for adding problems to a custom playlist -->
+    <div id="modal-add-algo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+            <div class="flex-between" style="margin-bottom: 1rem;">
+                <h2 style="margin:0;">Add Problems</h2>
+                <button class="btn-secondary" onclick="document.getElementById('modal-add-algo').style.display='none'">Close</button>
+            </div>
+            <input type="text" id="add-algo-search" class="input-field" placeholder="Search algorithms..." onkeyup="app.filterAddAlgo(this.value)" style="margin-bottom: 1rem;">
+            <div style="overflow-y: auto; flex: 1; border: 1px solid var(--border-color); border-radius: 6px;">
+                <table id="add-algo-table" style="margin: 0;">
+                    <tbody id="add-algo-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Mode Select View -->
     <div id="view-mode-select" class="view">
         <div class="navbar">
