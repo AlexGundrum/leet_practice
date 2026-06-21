@@ -171,6 +171,9 @@
         .editor-container { flex: 1; position: relative; display: flex; flex-direction: column; }
         .CodeMirror, .CodeMirror * {
             box-sizing: content-box;
+            font-variant-ligatures: none;
+            font-feature-settings: "calt" 0, "liga" 0;
+            -webkit-font-variant-ligatures: none;
         }
         .CodeMirror-activeline-background {
             background: rgba(255, 255, 255, 0.05) !important;
@@ -178,7 +181,6 @@
         .CodeMirror { 
             position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100%; 
             font-family: var(--font-mono); font-size: 15px; line-height: 1.5;
-            font-variant-ligatures: none;
         }
         .CodeMirror-vscrollbar {
             right: 0; top: 0; overflow-x: hidden; overflow-y: scroll;
