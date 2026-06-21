@@ -638,6 +638,133 @@
             personalBests: JSON.parse(localStorage.getItem('algorep_personal_bests') || '{}'),
             customAlgos: JSON.parse(localStorage.getItem('algorep_custom_algorithms') || '[]'),
 
+            initPyodideWorker() {
+                return new Promise((resolve, reject) => {
+                    if (this.pyodideWorker) {
+                        this.pyodideWorker.terminate();
+                    }
+                    const workerCode = `
+                        importScripts("https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js");
+
+                        let pyodideReady = false;
+                        let pyodide = null;
+
+                        async function load() {
+                            pyodide = await loadPyodide();
+                            pyodideReady = true;
+                            postMessage({ type: 'ready' });
+                        }
+
+                        load().catch(err => {
+                            postMessage({ type: 'error', error: err.message });
+                        });
+
+                        onmessage = async (e) => {
+                            if (!pyodideReady) {
+                                postMessage({ type: 'run_error', id: e.data.id, error: 'Pyodide not ready yet.' });
+                                return;
+                            }
+                            
+                            const { id, code, testCases } = e.data;
+                            try {
+                                pyodide.globals.set("user_code", code);
+                                pyodide.globals.set("test_cases_json", testCases);
+                                const pyCode = \`
+import json
+import traceback
+from collections import defaultdict, deque, Counter
+import heapq
+import math
+from typing import List, Optional, Dict, Tuple, Set
+
+import sys, io
+
+__out = io.StringIO()
+__err = io.StringIO()
+sys.stdout = __out
+sys.stderr = __err
+
+__global_scope = globals().copy()
+__exec_error = None
+__results = []
+
+try:
+    exec(user_code, __global_scope)
+except Exception as e:
+    __exec_error = traceback.format_exc()
+
+if not __exec_error:
+    tc_list = json.loads(test_cases_json)
+    for tc in tc_list:
+        try:
+            call_str = tc["call"]
+            if ";" in call_str:
+                parts = call_str.split(";")
+                exec(";".join(parts[:-1]), __global_scope)
+                res = eval(parts[-1], __global_scope)
+            else:
+                res = eval(call_str, __global_scope)
+
+            passed = (str(res) == tc["expected"])
+            __results.append({
+                "pass": passed,
+                "actual": str(res),
+                "expected": tc["expected"],
+                "error": None
+            })
+        except Exception as e:
+            __results.append({
+                "pass": False,
+                "actual": None,
+                "expected": tc["expected"],
+                "error": traceback.format_exc()
+            })
+
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+
+json.dumps({
+    "stdout": __out.getvalue(),
+    "stderr": __err.getvalue(),
+    "exec_error": __exec_error,
+    "results": __results
+})
+\`;
+                                const resultJson = await pyodide.runPythonAsync(pyCode);
+                                postMessage({ type: 'run_success', id, result: resultJson });
+                            } catch (err) {
+                                postMessage({ type: 'run_error', id, error: err.message });
+                            }
+                        };
+                    `;
+                    const blob = new Blob([workerCode], { type: 'application/javascript' });
+                    this.pyodideWorker = new Worker(URL.createObjectURL(blob));
+                    
+                    this.pyodideWorker.onmessage = (e) => {
+                        if (e.data.type === 'ready') {
+                            resolve();
+                        } else if (e.data.type === 'error') {
+                            reject(new Error(e.data.error));
+                        } else if (e.data.type === 'run_success' || e.data.type === 'run_error') {
+                            if (this.pendingRunCallback && this.pendingRunId === e.data.id) {
+                                this.pendingRunCallback(e.data);
+                                this.pendingRunCallback = null;
+                            }
+                        }
+                    };
+                    
+                    this.pyodideWorker.onerror = (err) => {
+                        console.error('Worker error:', err);
+                        // Likely an OOM or fatal error. Restart it.
+                        if (this.pendingRunCallback) {
+                            this.pendingRunCallback({ type: 'run_error', error: 'Worker crashed (possibly Memory Limit Exceeded). Restarting worker...' });
+                            this.pendingRunCallback = null;
+                        }
+                        this.initPyodideWorker();
+                    };
+                });
+            },
+
             async init() {
                 this.customPlaylists = JSON.parse(localStorage.getItem('algo_playlists') || '[]');
                 this.editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
@@ -691,7 +818,7 @@
                 pbSelect.innerHTML = this.algorithms.map(a => `<option value="${a.id}">${a.title} (${a.difficulty.toUpperCase()})</option>`).join('');
 
                 try {
-                    this.pyodide = await loadPyodide();
+                    await this.initPyodideWorker();
                     document.getElementById('loading-overlay').style.display = 'none';
                 } catch (err) {
                     console.error(err);
@@ -1230,82 +1357,56 @@
                 const btnRun = document.getElementById('btn-run');
                 
                 panel.style.display = 'flex';
-                content.innerHTML = '<div style="color: var(--text-secondary); display:flex; align-items:center; gap: 10px;"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div> Executing...</div>';
+                content.innerHTML = '<div style="color: var(--text-secondary); display:flex; align-items:center; gap: 10px;"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div> Executing... <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem; margin-left: 10px;" onclick="app.stopCode()">Stop Submission</button></div>';
                 document.getElementById('btn-submit').disabled = true;
                 btnRun.disabled = true;
 
-                this.pyodide.globals.set("user_code", userCode);
-                this.pyodide.globals.set("test_cases_json", JSON.stringify(a.test_cases));
+                const runId = Date.now();
+                this.pendingRunId = runId;
+                
+                this.runTimeout = setTimeout(() => {
+                    if (this.pendingRunId === runId) {
+                        if (this.pendingRunCallback) {
+                            this.pendingRunCallback({ type: 'run_error', error: 'Time Limit Exceeded (5 seconds). Execution terminated.' });
+                            this.pendingRunCallback = null;
+                        }
+                        this.initPyodideWorker(); // Restart worker
+                    }
+                }, 5000);
 
-                let pyCode = `
-import json
-import traceback
-from collections import defaultdict, deque, Counter
-import heapq
-import math
-from typing import List, Optional, Dict, Tuple, Set
+                const resultPromise = new Promise(resolve => {
+                    this.pendingRunCallback = resolve;
+                });
 
-import sys, io
+                this.pyodideWorker.postMessage({
+                    id: runId,
+                    code: userCode,
+                    testCases: JSON.stringify(a.test_cases)
+                });
 
-__out = io.StringIO()
-__err = io.StringIO()
-sys.stdout = __out
-sys.stderr = __err
-
-__global_scope = globals().copy()
-__exec_error = None
-__results = []
-
-try:
-    exec(user_code, __global_scope)
-except Exception as e:
-    __exec_error = str(e)
-
-if not __exec_error:
-    tc_list = json.loads(test_cases_json)
-    for tc in tc_list:
-        try:
-            call_str = tc["call"]
-            if ";" in call_str:
-                parts = call_str.split(";")
-                exec(";".join(parts[:-1]), __global_scope)
-                res = eval(parts[-1], __global_scope)
-            else:
-                res = eval(call_str, __global_scope)
-
-            passed = (str(res) == tc["expected"])
-            __results.append({
-                "pass": passed,
-                "actual": str(res),
-                "expected": tc["expected"],
-                "error": None
-            })
-        except Exception as e:
-            __results.append({
-                "pass": False,
-                "actual": None,
-                "expected": tc["expected"],
-                "error": str(e)
-            })
-
-sys.stdout = sys.__stdout__
-sys.stderr = sys.__stderr__
-
-json.dumps({
-    "stdout": __out.getvalue(),
-    "stderr": __err.getvalue(),
-    "exec_error": __exec_error,
-    "results": __results
-})
-`;
                 try {
-                    const resultJson = await this.pyodide.runPythonAsync(pyCode);
-                    const res = JSON.parse(resultJson);
-                    this.renderOutput(res);
+                    const response = await resultPromise;
+                    clearTimeout(this.runTimeout);
+                    
+                    if (response.type === 'run_error') {
+                        content.innerHTML = `<div class="text-red" style="margin-bottom: 1.5rem; background: rgba(239,71,67,0.1); padding: 15px; border-radius: 6px; border: 1px solid rgba(239,71,67,0.2);"><strong>Execution Error:</strong><br><pre style="font-family: var(--font-mono); margin:0; white-space: pre-wrap;">${this.escapeHtml(response.error)}</pre></div>`;
+                    } else if (response.type === 'run_success') {
+                        const res = JSON.parse(response.result);
+                        this.renderOutput(res);
+                    }
                 } catch(e) {
-                    content.innerHTML = `<div class="text-red"><strong>Pyodide Error:</strong><br>${e.message}</div>`;
+                    content.innerHTML = `<div class="text-red"><strong>System Error:</strong><br>${this.escapeHtml(e.message)}</div>`;
                 } finally {
                     btnRun.disabled = false;
+                }
+            },
+            
+            stopCode() {
+                if (this.pendingRunCallback) {
+                    clearTimeout(this.runTimeout);
+                    this.pendingRunCallback({ type: 'run_error', error: 'Execution manually stopped.' });
+                    this.pendingRunCallback = null;
+                    this.initPyodideWorker();
                 }
             },
             
