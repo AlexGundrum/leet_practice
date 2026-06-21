@@ -802,7 +802,14 @@
                 this.pyodide.globals.set("test_cases_json", JSON.stringify(a.test_cases));
 
                 let pyCode = `
-import sys, io, json
+import json
+import traceback
+from collections import defaultdict, deque, Counter
+import heapq
+import math
+from typing import List, Optional, Dict, Tuple, Set
+
+import sys, io
 
 __out = io.StringIO()
 __err = io.StringIO()
