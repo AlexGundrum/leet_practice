@@ -10,7 +10,7 @@ with open("c:/Users/alexg/code/leet_practice/index.html", "r", encoding="utf-8")
     html = f.read()
 
 # Replace existing window.fallbackAlgorithms array assignment
-html = re.sub(r'window\.fallbackAlgorithms\s*=\s*\[.*?\];', fallback_str, html, flags=re.DOTALL)
+html = re.sub(r'window\.fallbackAlgorithms\s*=\s*\[.*?\];', lambda m: fallback_str, html, flags=re.DOTALL)
 
 with open("c:/Users/alexg/code/leet_practice/index.html", "w", encoding="utf-8") as f:
     f.write(html)
