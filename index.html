@@ -829,7 +829,14 @@ if not __exec_error:
     tc_list = json.loads(test_cases_json)
     for tc in tc_list:
         try:
-            res = eval(tc["call"], __global_scope)
+            call_str = tc["call"]
+            if ";" in call_str:
+                parts = call_str.split(";")
+                exec(";".join(parts[:-1]), __global_scope)
+                res = eval(parts[-1], __global_scope)
+            else:
+                res = eval(call_str, __global_scope)
+
             passed = (str(res) == tc["expected"])
             __results.append({
                 "pass": passed,
