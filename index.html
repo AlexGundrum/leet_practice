@@ -118,9 +118,9 @@
         
         /* Badges */
         .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-        .badge.easy { color: #00b8a3; background: rgba(0, 184, 163, 0.15); }
-        .badge.medium { color: #ffc01e; background: rgba(255, 192, 30, 0.15); }
-        .badge.hard { color: #ff375f; background: rgba(255, 55, 95, 0.15); }
+        .badge.easy { color: #00b8a3; background: rgba(0, 184, 163, 0.15); border: 1px solid rgba(0, 184, 163, 0.3); }
+        .badge.medium { color: #ffc01e; background: rgba(255, 192, 30, 0.15); border: 1px solid rgba(255, 192, 30, 0.3); }
+        .badge.hard { color: #ff375f; background: rgba(255, 55, 95, 0.15); border: 1px solid rgba(255, 55, 95, 0.3); }
 
         /* Navbar */
         .navbar {
@@ -166,9 +166,7 @@
         }
         
         .editor-container { flex: 1; position: relative; display: flex; flex-direction: column; }
-        .CodeMirror, .CodeMirror * {
-            box-sizing: content-box;
-        }
+        .CodeMirror, .CodeMirror * { box-sizing: content-box; }
         .CodeMirror { 
             position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100%; 
             font-family: var(--font-mono); font-size: 15px; line-height: 1.5;
@@ -222,6 +220,7 @@
             <p style="text-align: center; color: var(--text-secondary); margin-top: -1.5rem; margin-bottom: 3rem; font-size: 1.1rem;">Master algorithms with focused repetition.</p>
             
             <div class="flex-center" style="margin-bottom: 3rem; gap: 2rem;">
+                <button class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.2rem; background: var(--success); box-shadow: 0 4px 14px rgba(44, 187, 93, 0.3);" onclick="app.showProblemList()">📋 Problem Set</button>
                 <button class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.2rem;" onclick="app.showModeSelect('blitz')">⚡ Blitz Mode</button>
                 <button class="btn-secondary" style="padding: 1.2rem 3rem; font-size: 1.2rem;" onclick="app.showModeSelect('pb')">⏱️ Personal Best</button>
             </div>
@@ -242,8 +241,33 @@
             </div>
 
             <div class="flex-center" style="margin-top: 2rem; gap: 1.5rem;">
-                <button class="btn-secondary" onclick="app.showHistory()">View History</button>
-                <button class="btn-secondary" onclick="app.showAddAlgo()">+ Add Algorithm</button>
+                <button class="btn-secondary" onclick="app.showHistory()">View History & Leaderboard</button>
+                <button class="btn-secondary" onclick="app.showAddAlgo()">+ Add Custom Algorithm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problem List View -->
+    <div id="view-problems" class="view">
+        <div class="navbar">
+            <div class="nav-brand" onclick="app.showHome()">Algo<span>Rep</span></div>
+            <button class="btn-secondary" style="padding: 6px 16px;" onclick="app.showHome()">Back</button>
+        </div>
+        <div class="container" style="max-width: 1000px;">
+            <div class="card">
+                <div class="flex-between" style="margin-bottom: 2rem;">
+                    <h2 style="margin: 0; color: var(--text-primary);">Master Drill Set</h2>
+                    <input type="text" id="problem-search" placeholder="Search algorithms..." style="max-width: 300px; margin: 0;" oninput="app.filterProblemList(this.value)">
+                </div>
+                <table id="problem-list-table">
+                    <thead><tr>
+                        <th style="width: 50px; text-align: center;">Status</th>
+                        <th>Title</th>
+                        <th style="width: 100px;">Difficulty</th>
+                        <th style="width: 120px;">Action</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -262,7 +286,7 @@
                     <label style="display:block; margin-bottom: 0.5rem; color: var(--text-secondary); font-weight: 600;">Time Limit (Minutes)</label>
                     <input type="number" id="blitz-minutes" value="10" min="1" max="120">
                     <label style="display:block; margin-bottom: 0.5rem; color: var(--text-secondary); font-weight: 600;">Tag Filter (Optional)</label>
-                    <input type="text" id="blitz-tag" placeholder="e.g. array, graph">
+                    <input type="text" id="blitz-tag" placeholder="e.g. graph, dynamic-programming">
                 </div>
 
                 <div id="pb-config" style="display: none;">
@@ -394,7 +418,7 @@
             
             <div class="flex-center" style="margin-top: 3rem; gap: 1.5rem;">
                 <button class="btn-secondary" onclick="app.startPractice(true)" style="padding: 12px 24px;">Try Again</button>
-                <button class="btn-primary" onclick="app.showHome()" style="padding: 12px 24px;">Return to Home</button>
+                <button class="btn-primary" onclick="app.showProblemList()" style="padding: 12px 24px;">Back to Problem Set</button>
             </div>
         </div>
     </div>
@@ -407,7 +431,7 @@
         </div>
         <div class="container" style="max-width: 1000px;">
             <div class="card" style="margin-bottom: 2rem;">
-                <h2 style="margin-bottom: 1.5rem; color: var(--accent);">Personal Bests</h2>
+                <h2 style="margin-bottom: 1.5rem; color: var(--accent);">Personal Bests Leaderboard</h2>
                 <table id="history-pb-table">
                     <thead><tr><th>Algorithm</th><th>Best Time</th><th>Attempts</th></tr></thead>
                     <tbody></tbody>
@@ -470,40 +494,11 @@
             <div style="margin-top: 3rem;">
                 <button class="btn-primary" onclick="app.saveCustomAlgorithm()" style="width: 100%; padding: 14px; font-size: 1.1rem;">Save Algorithm</button>
             </div>
-            
-            <div style="margin-top: 1.5rem; background: var(--bg-base); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); display: none;" id="add-json-output-container">
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">To permanently add to <code style="color:var(--accent);">algorithms.json</code>, copy this JSON:</p>
-                <textarea id="add-json-output" rows="6" readonly style="font-family: var(--font-mono); font-size: 0.85rem; background: transparent; border: none; padding: 0;"></textarea>
-            </div>
         </div>
     </div>
 
     <script>
-        // Fallback algorithms in case local fetch fails (e.g., opened via file:// without server)
-        const fallbackAlgorithms = [
-            {
-                "id": "bfs",
-                "title": "Implement BFS",
-                "stub": "from collections import deque\n\nclass Solution:\n    def bfs(self, graph: dict, start: int) -> list[int]:\n        # your code here\n        pass",
-                "test_cases": [
-                {"call": "Solution().bfs({0:[1,2],1:[3],2:[3],3:[]}, 0)", "expected": "[0, 1, 2, 3]"},
-                {"call": "Solution().bfs({1: [2, 3], 2: [4], 3: [4], 4: []}, 1)", "expected": "[1, 2, 3, 4]"}
-                ],
-                "tags": ["graph", "traversal"],
-                "difficulty": "easy"
-            },
-            {
-                "id": "two_pointers_sum",
-                "title": "Two Pointers (Sorted Pair Sum)",
-                "stub": "class Solution:\n    def twoSum(self, numbers: list[int], target: int) -> list[int]:\n        # return 1-indexed positions\n        # your code here\n        pass",
-                "test_cases": [
-                {"call": "Solution().twoSum([2,7,11,15], 9)", "expected": "[1, 2]"},
-                {"call": "Solution().twoSum([2,3,4], 6)", "expected": "[1, 3]"}
-                ],
-                "tags": ["array", "two-pointers"],
-                "difficulty": "easy"
-            }
-        ];
+        window.fallbackAlgorithms = [{"id": "drill_01_bs_standard_find_exact_target", "title": "BS \u2014 standard (find exact target)", "stub": "class Solution:\n    def search(self, nums: list[int], target: int) -> int:\n        pass", "test_cases": [{"call": "Solution().search([-1,0,3,5,9,12], 9)", "expected": "5"}, {"call": "Solution().search([-1,0,3,5,9,12], 2)", "expected": "-1"}, {"call": "Solution().search([5], 5)", "expected": "0"}], "tags": [], "difficulty": "easy"}, {"id": "drill_02_bs_leftmost_occurrence", "title": "BS \u2014 leftmost occurrence", "stub": "class Solution:\n    def first_position(self, nums: list[int], target: int) -> int:\n        pass", "test_cases": [{"call": "Solution().first_position([5,7,7,8,8,10], 8)", "expected": "3"}, {"call": "Solution().first_position([5,7,7,8,8,10], 6)", "expected": "-1"}, {"call": "Solution().first_position([1,1,1,1], 1)", "expected": "0"}], "tags": [], "difficulty": "medium"}, {"id": "drill_03_bs_rightmost_occurrence", "title": "BS \u2014 rightmost occurrence", "stub": "class Solution:\n    def last_position(self, nums: list[int], target: int) -> int:\n        pass", "test_cases": [{"call": "Solution().last_position([5,7,7,8,8,10], 8)", "expected": "4"}, {"call": "Solution().last_position([5,7,7,8,8,10], 6)", "expected": "-1"}, {"call": "Solution().last_position([1,1,1,1], 1)", "expected": "3"}], "tags": [], "difficulty": "medium"}, {"id": "drill_04_bs_rotated_sorted_array", "title": "BS \u2014 rotated sorted array", "stub": "class Solution:\n    def search(self, nums: list[int], target: int) -> int:\n        pass", "test_cases": [{"call": "Solution().search([4,5,6,7,0,1,2], 0)", "expected": "4"}, {"call": "Solution().search([4,5,6,7,0,1,2], 3)", "expected": "-1"}, {"call": "Solution().search([1], 0)", "expected": "-1"}], "tags": [], "difficulty": "medium"}, {"id": "drill_05_bs_on_answer_space_min_max_feasibility", "title": "BS \u2014 on answer space (min/max feasibility)", "stub": "class Solution:\n    def min_capacity(self, weights: list[int], days: int) -> int:\n        pass", "test_cases": [{"call": "Solution().min_capacity([1,2,3,4,5,6,7,8,9,10], 5)", "expected": "15"}, {"call": "Solution().min_capacity([3,2,2,4,1,4], 3)", "expected": "6"}, {"call": "Solution().min_capacity([1,2,3,1,1], 4)", "expected": "3"}], "tags": [], "difficulty": "medium"}, {"id": "drill_06_bfs_standard_graph_adjacency_list", "title": "BFS \u2014 standard graph (adjacency list)", "stub": "from collections import deque\n\nclass Solution:\n    def bfs(self, graph: dict, start: int) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().bfs({0:[1,2],1:[3],2:[3],3:[]}, 0)", "expected": "[0, 1, 2, 3]"}, {"call": "Solution().bfs({0:[1],1:[2],2:[]}, 0)", "expected": "[0, 1, 2]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_07_bfs_level_order_tree_traversal", "title": "BFS \u2014 level order tree traversal", "stub": "from collections import deque\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def level_order(self, root: TreeNode) -> list[list[int]]:\n        pass", "test_cases": [{"call": "r=TreeNode(3);r.left=TreeNode(9);r.right=TreeNode(20);r.right.left=TreeNode(15);r.right.right=TreeNode(7);Solution().level_order(r)", "expected": "[[3], [9, 20], [15, 7]]"}, {"call": "Solution().level_order(None)", "expected": "[]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_08_multi_source_bfs_grid", "title": "Multi-source BFS (grid)", "stub": "from collections import deque\n\nclass Solution:\n    def oranges_rotting(self, grid: list[list[int]]) -> int:\n        pass", "test_cases": [{"call": "Solution().oranges_rotting([[2,1,1],[1,1,0],[0,1,1]])", "expected": "4"}, {"call": "Solution().oranges_rotting([[2,1,1],[0,1,1],[1,0,1]])", "expected": "-1"}, {"call": "Solution().oranges_rotting([[0,2]])", "expected": "0"}], "tags": [], "difficulty": "medium"}, {"id": "drill_09_dfs_iterative_explicit_stack", "title": "DFS \u2014 iterative (explicit stack)", "stub": "class Solution:\n    def dfs(self, graph: dict, start: int) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().dfs({0:[1,2],1:[3],2:[3],3:[]}, 0)", "expected": "[0, 2, 3, 1]"}, {"call": "Solution().dfs({0:[1],1:[2],2:[]}, 0)", "expected": "[0, 1, 2]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_10_dfs_recursive_graph_track_visited", "title": "DFS \u2014 recursive (graph, track visited)", "stub": "class Solution:\n    def dfs(self, graph: dict, start: int) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().dfs({0:[1,2],1:[3],2:[3],3:[]}, 0)", "expected": "[0, 1, 3, 2]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_11_connected_components_undirected", "title": "Connected components (undirected)", "stub": "class Solution:\n    def count_components(self, n: int, edges: list[list[int]]) -> int:\n        pass", "test_cases": [{"call": "Solution().count_components(5, [[0,1],[1,2],[3,4]])", "expected": "2"}, {"call": "Solution().count_components(4, [[0,1],[2,3],[1,2]])", "expected": "1"}, {"call": "Solution().count_components(3, [])", "expected": "3"}], "tags": [], "difficulty": "easy"}, {"id": "drill_12_cycle_detection_directed_graph_dfs_3_color", "title": "Cycle detection \u2014 directed graph (DFS 3-color)", "stub": "class Solution:\n    def has_cycle(self, n: int, edges: list[list[int]]) -> bool:\n        pass", "test_cases": [{"call": "Solution().has_cycle(4, [[0,1],[1,2],[2,3],[3,1]])", "expected": "True"}, {"call": "Solution().has_cycle(3, [[0,1],[1,2]])", "expected": "False"}], "tags": [], "difficulty": "medium"}, {"id": "drill_13_bipartite_check_bfs_2_coloring", "title": "Bipartite check (BFS 2-coloring)", "stub": "from collections import deque\n\nclass Solution:\n    def is_bipartite(self, graph: list[list[int]]) -> bool:\n        pass", "test_cases": [{"call": "Solution().is_bipartite([[1,3],[0,2],[1,3],[0,2]])", "expected": "True"}, {"call": "Solution().is_bipartite([[1,2,3],[0,2],[0,1,3],[0,2]])", "expected": "False"}], "tags": [], "difficulty": "medium"}, {"id": "drill_14_bfs_on_grid_4_directional_flood_fill", "title": "BFS on grid \u2014 4-directional flood fill", "stub": "from collections import deque\n\nclass Solution:\n    def flood_fill(self, image: list[list[int]], sr: int, sc: int, color: int) -> list[list[int]]:\n        pass", "test_cases": [{"call": "Solution().flood_fill([[1,1,1],[1,1,0],[1,0,1]], 1, 1, 2)", "expected": "[[2,2,2],[2,2,0],[2,0,1]]"}, {"call": "Solution().flood_fill([[0,0,0],[0,0,0]], 0, 0, 0)", "expected": "[[0,0,0],[0,0,0]]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_15_topo_sort_kahn_s_algorithm_bfs_in_degree", "title": "Topo sort \u2014 Kahn's algorithm (BFS + in-degree)", "stub": "from collections import deque\n\nclass Solution:\n    def topo_sort(self, n: int, edges: list[list[int]]) -> list[int]:\n        pass", "test_cases": [{"call": "r=Solution().topo_sort(6,[[5,2],[5,0],[4,0],[4,1],[2,3],[3,1]]);len(r)==6 and r.index(5)<r.index(2) and r.index(2)<r.index(3)", "expected": "True"}, {"call": "Solution().topo_sort(2, [[1,0]])", "expected": "[1, 0]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_16_topo_sort_dfs_postorder", "title": "Topo sort \u2014 DFS postorder", "stub": "class Solution:\n    def topo_sort(self, n: int, edges: list[list[int]]) -> list[int]:\n        pass", "test_cases": [{"call": "r=Solution().topo_sort(4,[[0,1],[0,2],[1,3],[2,3]]);r.index(0)<r.index(1)<r.index(3) and r.index(0)<r.index(2)<r.index(3)", "expected": "True"}], "tags": [], "difficulty": "medium"}, {"id": "drill_17_dijkstra_s_min_heap_single_source", "title": "Dijkstra's (min-heap, single source)", "stub": "import heapq\n\nclass Solution:\n    def dijkstra(self, n: int, edges: list[list[int]], src: int) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().dijkstra(5,[[0,1,4],[0,2,1],[2,1,2],[1,3,1],[2,3,5]],0)", "expected": "[0, 3, 1, 4, -1]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_18_bellman_ford_handles_negative_weights", "title": "Bellman-Ford (handles negative weights)", "stub": "class Solution:\n    def bellman_ford(self, n: int, edges: list[list[int]], src: int) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().bellman_ford(5,[[0,1,-1],[0,2,4],[1,2,3],[1,3,2],[1,4,2],[3,2,5],[3,1,1],[4,3,-3]],0)", "expected": "[0, -1, 2, -2, 1]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_19_floyd_warshall_all_pairs_shortest_path", "title": "Floyd-Warshall (all-pairs shortest path)", "stub": "class Solution:\n    def floyd_warshall(self, n: int, edges: list[list[int]]) -> list[list[int]]:\n        pass", "test_cases": [{"call": "Solution().floyd_warshall(4,[[0,1,3],[0,3,7],[1,0,8],[1,2,2],[2,0,5],[2,3,1],[3,0,2]])[0]", "expected": "[0, 3, 5, 6]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_20_prim_s_mst_min_heap_adjacency_list", "title": "Prim's MST (min-heap, adjacency list)", "stub": "import heapq\n\nclass Solution:\n    def prims(self, n: int, edges: list[list[int]]) -> int:\n        pass", "test_cases": [{"call": "Solution().prims(4,[[0,1,1],[0,2,4],[1,2,2],[1,3,5],[2,3,1]])", "expected": "4"}], "tags": [], "difficulty": "hard"}, {"id": "drill_21_kruskal_s_mst_sort_edges_union_find", "title": "Kruskal's MST (sort edges + union-find)", "stub": "class Solution:\n    def kruskals(self, n: int, edges: list[list[int]]) -> int:\n        pass", "test_cases": [{"call": "Solution().kruskals(4,[[0,1,1],[0,2,4],[1,2,2],[1,3,5],[2,3,1]])", "expected": "4"}], "tags": [], "difficulty": "hard"}, {"id": "drill_22_union_find_path_compression_union_by_rank", "title": "Union-Find \u2014 path compression + union by rank", "stub": "class UnionFind:\n    def __init__(self, n: int):\n        pass\n    def find(self, x: int) -> int:\n        pass\n    def union(self, x: int, y: int) -> bool:\n        pass\n\nclass Solution:\n    def count_components(self, n: int, edges: list[list[int]]) -> int:\n        pass", "test_cases": [{"call": "Solution().count_components(5,[[0,1],[1,2],[3,4]])", "expected": "2"}, {"call": "Solution().count_components(3,[])", "expected": "3"}, {"call": "Solution().count_components(4,[[0,1],[0,2],[0,3]])", "expected": "1"}], "tags": [], "difficulty": "medium"}, {"id": "drill_23_tarjan_s_bridges_critical_connections", "title": "Tarjan's bridges (critical connections)", "stub": "class Solution:\n    def critical_connections(self, n: int, connections: list[list[int]]) -> list[list[int]]:\n        pass", "test_cases": [{"call": "sorted(Solution().critical_connections(4,[[0,1],[1,2],[2,0],[1,3]]))", "expected": "[[1, 3]]"}], "tags": [], "difficulty": "hard"}, {"id": "drill_24_preorder_traversal_iterative_root_left_right", "title": "Preorder traversal \u2014 iterative (root, left, right)", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def preorder(self, root: TreeNode) -> list[int]:\n        pass", "test_cases": [{"call": "r=TreeNode(1);r.right=TreeNode(2);r.right.left=TreeNode(3);Solution().preorder(r)", "expected": "[1, 2, 3]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_25_inorder_traversal_iterative_left_root_right", "title": "Inorder traversal \u2014 iterative (left, root, right)", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def inorder(self, root: TreeNode) -> list[int]:\n        pass", "test_cases": [{"call": "r=TreeNode(1);r.right=TreeNode(2);r.right.left=TreeNode(3);Solution().inorder(r)", "expected": "[1, 3, 2]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_26_postorder_traversal_iterative_left_right_root", "title": "Postorder traversal \u2014 iterative (left, right, root)", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def postorder(self, root: TreeNode) -> list[int]:\n        pass", "test_cases": [{"call": "r=TreeNode(1);r.right=TreeNode(2);r.right.left=TreeNode(3);Solution().postorder(r)", "expected": "[3, 2, 1]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_27_lca_binary_tree_dfs_recursive", "title": "LCA \u2014 binary tree (DFS recursive)", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def lca(self, root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode:\n        pass", "test_cases": [{"call": "def build(v,l=None,r=None):\\n    n=TreeNode(v);n.left=l;n.right=r;return n\\nr=build(3,build(5,build(6),build(2,build(7),build(4))),build(1,build(0),build(8)))\\np=r.left;q=r.right;Solution().lca(r,p,q).val", "expected": "3"}], "tags": [], "difficulty": "medium"}, {"id": "drill_28_validate_bst_dfs_with_min_max_bounds", "title": "Validate BST (DFS with min/max bounds)", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def is_valid_bst(self, root: TreeNode) -> bool:\n        pass", "test_cases": [{"call": "r=TreeNode(2);r.left=TreeNode(1);r.right=TreeNode(3);Solution().is_valid_bst(r)", "expected": "True"}, {"call": "r=TreeNode(5);r.left=TreeNode(1);r.right=TreeNode(4);r.right.left=TreeNode(3);r.right.right=TreeNode(6);Solution().is_valid_bst(r)", "expected": "False"}], "tags": [], "difficulty": "medium"}, {"id": "drill_29_diameter_of_binary_tree_dfs_postorder", "title": "Diameter of binary tree (DFS postorder)", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def diameter(self, root: TreeNode) -> int:\n        pass", "test_cases": [{"call": "r=TreeNode(1);r.left=TreeNode(2);r.right=TreeNode(3);r.left.left=TreeNode(4);r.left.right=TreeNode(5);Solution().diameter(r)", "expected": "3"}, {"call": "r=TreeNode(1);r.left=TreeNode(2);Solution().diameter(r)", "expected": "1"}], "tags": [], "difficulty": "easy"}, {"id": "drill_30_max_path_sum_in_binary_tree_tree_dp", "title": "Max path sum in binary tree (tree DP)", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def max_path_sum(self, root: TreeNode) -> int:\n        pass", "test_cases": [{"call": "r=TreeNode(-10);r.left=TreeNode(9);r.right=TreeNode(20);r.right.left=TreeNode(15);r.right.right=TreeNode(7);Solution().max_path_sum(r)", "expected": "42"}, {"call": "r=TreeNode(1);r.left=TreeNode(2);r.right=TreeNode(3);Solution().max_path_sum(r)", "expected": "6"}], "tags": [], "difficulty": "hard"}, {"id": "drill_31_serialize_deserialize_binary_tree", "title": "Serialize / deserialize binary tree", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Codec:\n    def serialize(self, root: TreeNode) -> str:\n        pass\n    def deserialize(self, data: str) -> TreeNode:\n        pass", "test_cases": [{"call": "def inorder(r):\\n    return [] if not r else inorder(r.left)+[r.val]+inorder(r.right)\\nc=Codec();r=TreeNode(1);r.left=TreeNode(2);r.right=TreeNode(3);r.right.left=TreeNode(4);r.right.right=TreeNode(5)\\ninorder(c.deserialize(c.serialize(r)))", "expected": "[2, 1, 4, 3, 5]"}], "tags": [], "difficulty": "hard"}, {"id": "drill_32_build_tree_from_preorder_inorder_arrays", "title": "Build tree from preorder + inorder arrays", "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def build_tree(self, preorder: list[int], inorder: list[int]) -> TreeNode:\n        pass", "test_cases": [{"call": "def post(r):\\n    return [] if not r else post(r.left)+post(r.right)+[r.val]\\npost(Solution().build_tree([3,9,20,15,7],[9,3,15,20,7]))", "expected": "[9, 15, 7, 20, 3]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_33_reverse_linked_list_iterative", "title": "Reverse linked list \u2014 iterative", "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def reverse(self, head: ListNode) -> ListNode:\n        pass", "test_cases": [{"call": "def mk(vs):\\n    h=t=ListNode(vs[0])\\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\\n    return h\\ndef ls(h):\\n    r=[]\\n    while h:r.append(h.val);h=h.next\\n    return r\\nls(Solution().reverse(mk([1,2,3,4,5])))", "expected": "[5, 4, 3, 2, 1]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_34_cycle_detection_floyd_s_tortoise_and_hare", "title": "Cycle detection \u2014 Floyd's tortoise and hare", "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def has_cycle(self, head: ListNode) -> bool:\n        pass", "test_cases": [{"call": "a=ListNode(3);b=ListNode(2);c=ListNode(0);d=ListNode(-4);a.next=b;b.next=c;c.next=d;d.next=b;Solution().has_cycle(a)", "expected": "True"}, {"call": "a=ListNode(1);b=ListNode(2);a.next=b;Solution().has_cycle(a)", "expected": "False"}], "tags": [], "difficulty": "easy"}, {"id": "drill_35_find_middle_fast_slow_pointers", "title": "Find middle \u2014 fast/slow pointers", "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def find_middle(self, head: ListNode) -> ListNode:\n        pass", "test_cases": [{"call": "def mk(vs):\\n    h=t=ListNode(vs[0])\\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\\n    return h\\nSolution().find_middle(mk([1,2,3,4,5])).val", "expected": "3"}, {"call": "def mk(vs):\\n    h=t=ListNode(vs[0])\\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\\n    return h\\nSolution().find_middle(mk([1,2,3,4])).val", "expected": "3"}], "tags": [], "difficulty": "easy"}, {"id": "drill_36_remove_nth_node_from_end_two_pointer_gap", "title": "Remove Nth node from end (two-pointer gap)", "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def remove_nth(self, head: ListNode, n: int) -> ListNode:\n        pass", "test_cases": [{"call": "def mk(vs):\\n    h=t=ListNode(vs[0])\\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\\n    return h\\ndef ls(h):\\n    r=[]\\n    while h:r.append(h.val);h=h.next\\n    return r\\nls(Solution().remove_nth(mk([1,2,3,4,5]),2))", "expected": "[1, 2, 3, 5]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_37_merge_two_sorted_lists", "title": "Merge two sorted lists", "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def merge(self, l1: ListNode, l2: ListNode) -> ListNode:\n        pass", "test_cases": [{"call": "def mk(vs):\\n    if not vs: return None\\n    h=t=ListNode(vs[0])\\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\\n    return h\\ndef ls(h):\\n    r=[]\\n    while h:r.append(h.val);h=h.next\\n    return r\\nls(Solution().merge(mk([1,2,4]),mk([1,3,4])))", "expected": "[1, 1, 2, 3, 4, 4]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_38_stack_bracket_matching_valid_parentheses", "title": "Stack \u2014 bracket matching (valid parentheses)", "stub": "class Solution:\n    def is_valid(self, s: str) -> bool:\n        pass", "test_cases": [{"call": "Solution().is_valid(\"()[]{}\")", "expected": "True"}, {"call": "Solution().is_valid(\"(]\")", "expected": "False"}, {"call": "Solution().is_valid(\"{[]}\")", "expected": "True"}, {"call": "Solution().is_valid(\"([)]\")", "expected": "False"}], "tags": [], "difficulty": "easy"}, {"id": "drill_39_stack_evaluate_reverse_polish_notation", "title": "Stack \u2014 evaluate reverse polish notation", "stub": "class Solution:\n    def eval_rpn(self, tokens: list[str]) -> int:\n        pass", "test_cases": [{"call": "Solution().eval_rpn([\"2\",\"1\",\"+\",\"3\",\"*\"])", "expected": "9"}, {"call": "Solution().eval_rpn([\"4\",\"13\",\"5\",\"/\",\"+\"])", "expected": "6"}, {"call": "Solution().eval_rpn([\"10\",\"6\",\"9\",\"3\",\"+\",\"-11\",\"*\",\"/\",\"*\",\"17\",\"+\",\"5\",\"+\"])", "expected": "22"}], "tags": [], "difficulty": "medium"}, {"id": "drill_40_monotonic_stack_next_greater_element", "title": "Monotonic stack \u2014 next greater element", "stub": "class Solution:\n    def next_greater(self, nums: list[int]) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().next_greater([2,1,2,4,3])", "expected": "[4, 2, 4, -1, -1]"}, {"call": "Solution().next_greater([1,3,2])", "expected": "[3, -1, -1]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_41_monotonic_deque_sliding_window_maximum", "title": "Monotonic deque \u2014 sliding window maximum", "stub": "from collections import deque\n\nclass Solution:\n    def max_sliding_window(self, nums: list[int], k: int) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().max_sliding_window([1,3,-1,-3,5,3,6,7],3)", "expected": "[3, 3, 5, 5, 6, 7]"}, {"call": "Solution().max_sliding_window([1],1)", "expected": "[1]"}], "tags": [], "difficulty": "hard"}, {"id": "drill_42_merge_intervals_sort_greedy", "title": "Merge intervals (sort + greedy)", "stub": "class Solution:\n    def merge(self, intervals: list[list[int]]) -> list[list[int]]:\n        pass", "test_cases": [{"call": "Solution().merge([[1,3],[2,6],[8,10],[15,18]])", "expected": "[[1, 6], [8, 10], [15, 18]]"}, {"call": "Solution().merge([[1,4],[4,5]])", "expected": "[[1, 5]]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_43_insert_interval_merge_with_new_interval", "title": "Insert interval (merge with new interval)", "stub": "class Solution:\n    def insert(self, intervals: list[list[int]], new: list[int]) -> list[list[int]]:\n        pass", "test_cases": [{"call": "Solution().insert([[1,3],[6,9]],[2,5])", "expected": "[[1, 5], [6, 9]]"}, {"call": "Solution().insert([[1,2],[3,5],[6,7],[8,10],[12,16]],[4,8])", "expected": "[[1, 2], [3, 10], [12, 16]]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_44_greedy_interval_scheduling_minimum_arrows", "title": "Greedy interval scheduling (minimum arrows)", "stub": "class Solution:\n    def find_min_arrows(self, points: list[list[int]]) -> int:\n        pass", "test_cases": [{"call": "Solution().find_min_arrows([[10,16],[2,8],[1,6],[7,12]])", "expected": "2"}, {"call": "Solution().find_min_arrows([[1,2],[3,4],[5,6],[7,8]])", "expected": "4"}], "tags": [], "difficulty": "medium"}, {"id": "drill_45_kth_largest_element_min_heap_of_size_k", "title": "Kth largest element (min-heap of size k)", "stub": "import heapq\n\nclass Solution:\n    def kth_largest(self, nums: list[int], k: int) -> int:\n        pass", "test_cases": [{"call": "Solution().kth_largest([3,2,1,5,6,4],2)", "expected": "5"}, {"call": "Solution().kth_largest([3,2,3,1,2,4,5,5,6],4)", "expected": "4"}], "tags": [], "difficulty": "medium"}, {"id": "drill_46_merge_k_sorted_lists_min_heap", "title": "Merge K sorted lists (min-heap)", "stub": "import heapq\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n    def __lt__(self, other):\n        return self.val < other.val\n\nclass Solution:\n    def merge_k_lists(self, lists: list[ListNode]) -> ListNode:\n        pass", "test_cases": [{"call": "def mk(vs):\\n    if not vs:return None\\n    h=t=ListNode(vs[0])\\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\\n    return h\\ndef ls(h):\\n    r=[]\\n    while h:r.append(h.val);h=h.next\\n    return r\\nls(Solution().merge_k_lists([mk([1,4,5]),mk([1,3,4]),mk([2,6])]))", "expected": "[1, 1, 2, 3, 4, 4, 5, 6]"}], "tags": [], "difficulty": "hard"}, {"id": "drill_47_top_k_frequent_elements_heap_hash_map", "title": "Top K frequent elements (heap + hash map)", "stub": "import heapq\nfrom collections import Counter\n\nclass Solution:\n    def top_k_frequent(self, nums: list[int], k: int) -> list[int]:\n        pass", "test_cases": [{"call": "sorted(Solution().top_k_frequent([1,1,1,2,2,3],2))", "expected": "[1, 2]"}, {"call": "Solution().top_k_frequent([1],1)", "expected": "[1]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_48_fixed_window_max_sum_subarray_of_size_k", "title": "Fixed window \u2014 max sum subarray of size k", "stub": "class Solution:\n    def max_sum(self, nums: list[int], k: int) -> int:\n        pass", "test_cases": [{"call": "Solution().max_sum([2,1,5,1,3,2],3)", "expected": "9"}, {"call": "Solution().max_sum([2,3,4,1,5],2)", "expected": "7"}], "tags": [], "difficulty": "easy"}, {"id": "drill_49_variable_window_longest_substring_without_repeating", "title": "Variable window \u2014 longest substring without repeating", "stub": "class Solution:\n    def length_of_longest(self, s: str) -> int:\n        pass", "test_cases": [{"call": "Solution().length_of_longest(\"abcabcbb\")", "expected": "3"}, {"call": "Solution().length_of_longest(\"bbbbb\")", "expected": "1"}, {"call": "Solution().length_of_longest(\"pwwkew\")", "expected": "3"}], "tags": [], "difficulty": "medium"}, {"id": "drill_50_two_pointers_pair_sum_in_sorted_array", "title": "Two pointers \u2014 pair sum in sorted array", "stub": "class Solution:\n    def two_sum(self, nums: list[int], target: int) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().two_sum([2,7,11,15],9)", "expected": "[0, 1]"}, {"call": "Solution().two_sum([2,3,4],6)", "expected": "[0, 2]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_51_dutch_national_flag_3_way_partition", "title": "Dutch National Flag (3-way partition)", "stub": "class Solution:\n    def sort_colors(self, nums: list[int]) -> list[int]:\n        pass", "test_cases": [{"call": "Solution().sort_colors([2,0,2,1,1,0])", "expected": "[0, 0, 1, 1, 2, 2]"}, {"call": "Solution().sort_colors([2,0,1])", "expected": "[0, 1, 2]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_52_fast_slow_pointers_find_duplicate_floyd_s_on_array", "title": "Fast/slow pointers \u2014 find duplicate (Floyd's on array)", "stub": "class Solution:\n    def find_duplicate(self, nums: list[int]) -> int:\n        pass", "test_cases": [{"call": "Solution().find_duplicate([1,3,4,2,2])", "expected": "2"}, {"call": "Solution().find_duplicate([3,1,3,4,2])", "expected": "3"}], "tags": [], "difficulty": "medium"}, {"id": "drill_53_prefix_sum_1d_range_query", "title": "Prefix sum \u2014 1D range query", "stub": "class NumArray:\n    def __init__(self, nums: list[int]):\n        pass\n    def sum_range(self, left: int, right: int) -> int:\n        pass", "test_cases": [{"call": "n=NumArray([-2,0,3,-5,2,-1]);[n.sum_range(0,2),n.sum_range(2,5),n.sum_range(0,5)]", "expected": "[1, -1, -3]"}], "tags": [], "difficulty": "easy"}, {"id": "drill_54_kadane_s_algorithm_max_subarray_sum", "title": "Kadane's algorithm (max subarray sum)", "stub": "class Solution:\n    def max_subarray(self, nums: list[int]) -> int:\n        pass", "test_cases": [{"call": "Solution().max_subarray([-2,1,-3,4,-1,2,1,-5,4])", "expected": "6"}, {"call": "Solution().max_subarray([1])", "expected": "1"}, {"call": "Solution().max_subarray([5,4,-1,7,8])", "expected": "23"}], "tags": [], "difficulty": "easy"}, {"id": "drill_55_1d_dp_climbing_stairs_fibonacci", "title": "1D DP \u2014 climbing stairs / Fibonacci", "stub": "class Solution:\n    def climb_stairs(self, n: int) -> int:\n        pass", "test_cases": [{"call": "Solution().climb_stairs(5)", "expected": "8"}, {"call": "Solution().climb_stairs(3)", "expected": "3"}, {"call": "Solution().climb_stairs(1)", "expected": "1"}], "tags": [], "difficulty": "easy"}, {"id": "drill_56_1d_dp_house_robber_max_non_adjacent", "title": "1D DP \u2014 house robber (max non-adjacent)", "stub": "class Solution:\n    def rob(self, nums: list[int]) -> int:\n        pass", "test_cases": [{"call": "Solution().rob([2,7,9,3,1])", "expected": "12"}, {"call": "Solution().rob([1,2,3,1])", "expected": "4"}, {"call": "Solution().rob([2,1])", "expected": "2"}], "tags": [], "difficulty": "easy"}, {"id": "drill_57_1d_dp_coin_change_unbounded_knapsack", "title": "1D DP \u2014 coin change (unbounded knapsack)", "stub": "class Solution:\n    def coin_change(self, coins: list[int], amount: int) -> int:\n        pass", "test_cases": [{"call": "Solution().coin_change([1,5,6,9],11)", "expected": "2"}, {"call": "Solution().coin_change([2],3)", "expected": "-1"}, {"call": "Solution().coin_change([1],0)", "expected": "0"}], "tags": [], "difficulty": "medium"}, {"id": "drill_58_1d_dp_lis_o_n_log_n_with_binary_search", "title": "1D DP \u2014 LIS O(n log n) with binary search", "stub": "import bisect\n\nclass Solution:\n    def length_of_lis(self, nums: list[int]) -> int:\n        pass", "test_cases": [{"call": "Solution().length_of_lis([10,9,2,5,3,7,101,18])", "expected": "4"}, {"call": "Solution().length_of_lis([0,1,0,3,2,3])", "expected": "4"}, {"call": "Solution().length_of_lis([7,7,7,7])", "expected": "1"}], "tags": [], "difficulty": "medium"}, {"id": "drill_59_2d_dp_lcs_longest_common_subsequence", "title": "2D DP \u2014 LCS (longest common subsequence)", "stub": "class Solution:\n    def lcs(self, text1: str, text2: str) -> int:\n        pass", "test_cases": [{"call": "Solution().lcs(\"abcde\",\"ace\")", "expected": "3"}, {"call": "Solution().lcs(\"abc\",\"abc\")", "expected": "3"}, {"call": "Solution().lcs(\"abc\",\"def\")", "expected": "0"}], "tags": [], "difficulty": "medium"}, {"id": "drill_60_2d_dp_edit_distance_levenshtein", "title": "2D DP \u2014 edit distance (Levenshtein)", "stub": "class Solution:\n    def min_distance(self, word1: str, word2: str) -> int:\n        pass", "test_cases": [{"call": "Solution().min_distance(\"horse\",\"ros\")", "expected": "3"}, {"call": "Solution().min_distance(\"intention\",\"execution\")", "expected": "5"}, {"call": "Solution().min_distance(\"\",\"a\")", "expected": "1"}], "tags": [], "difficulty": "medium"}, {"id": "drill_61_2d_dp_unique_paths_grid", "title": "2D DP \u2014 unique paths (grid)", "stub": "class Solution:\n    def unique_paths(self, m: int, n: int) -> int:\n        pass", "test_cases": [{"call": "Solution().unique_paths(3,7)", "expected": "28"}, {"call": "Solution().unique_paths(3,2)", "expected": "3"}, {"call": "Solution().unique_paths(1,1)", "expected": "1"}], "tags": [], "difficulty": "easy"}, {"id": "drill_62_2d_dp_minimum_path_sum_grid", "title": "2D DP \u2014 minimum path sum (grid)", "stub": "class Solution:\n    def min_path_sum(self, grid: list[list[int]]) -> int:\n        pass", "test_cases": [{"call": "Solution().min_path_sum([[1,3,1],[1,5,1],[4,2,1]])", "expected": "7"}, {"call": "Solution().min_path_sum([[1,2],[5,6],[1,1]])", "expected": "8"}], "tags": [], "difficulty": "medium"}, {"id": "drill_63_0_1_knapsack_partition_equal_subset_sum", "title": "0/1 Knapsack \u2014 partition equal subset sum", "stub": "class Solution:\n    def can_partition(self, nums: list[int]) -> bool:\n        pass", "test_cases": [{"call": "Solution().can_partition([1,5,11,5])", "expected": "True"}, {"call": "Solution().can_partition([1,2,3,5])", "expected": "False"}], "tags": [], "difficulty": "medium"}, {"id": "drill_64_interval_dp_burst_balloons", "title": "Interval DP \u2014 burst balloons", "stub": "class Solution:\n    def max_coins(self, nums: list[int]) -> int:\n        pass", "test_cases": [{"call": "Solution().max_coins([3,1,5,8])", "expected": "167"}, {"call": "Solution().max_coins([1,5])", "expected": "10"}], "tags": [], "difficulty": "hard"}, {"id": "drill_65_dp_memoization_word_break", "title": "DP + memoization \u2014 word break", "stub": "class Solution:\n    def word_break(self, s: str, word_dict: list[str]) -> bool:\n        pass", "test_cases": [{"call": "Solution().word_break(\"leetcode\",[\"leet\",\"code\"])", "expected": "True"}, {"call": "Solution().word_break(\"applepenapple\",[\"apple\",\"pen\"])", "expected": "True"}, {"call": "Solution().word_break(\"catsandog\",[\"cats\",\"dog\",\"sand\",\"and\",\"cat\"])", "expected": "False"}], "tags": [], "difficulty": "medium"}, {"id": "drill_66_bitmask_dp_minimum_xor_sum_assignment", "title": "Bitmask DP \u2014 minimum XOR sum / assignment", "stub": "class Solution:\n    def minimum_xor_sum(self, nums1: list[int], nums2: list[int]) -> int:\n        pass", "test_cases": [{"call": "Solution().minimum_xor_sum([1,2],[2,3])", "expected": "2"}, {"call": "Solution().minimum_xor_sum([1,0,3],[5,3,4])", "expected": "8"}], "tags": [], "difficulty": "hard"}, {"id": "drill_67_trie_build_from_scratch_insert_search_startswith", "title": "Trie \u2014 build from scratch (insert / search / startsWith)", "stub": "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\n\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n    def insert(self, word: str) -> None:\n        pass\n    def search(self, word: str) -> bool:\n        pass\n    def starts_with(self, prefix: str) -> bool:\n        pass", "test_cases": [{"call": "t=Trie();t.insert(\"apple\");[t.search(\"apple\"),t.search(\"app\"),t.starts_with(\"app\")]", "expected": "[True, False, True]"}, {"call": "t=Trie();t.insert(\"app\");[t.search(\"app\"),t.starts_with(\"ap\")]", "expected": "[True, True]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_68_backtracking_subsets_power_set", "title": "Backtracking \u2014 subsets (power set)", "stub": "class Solution:\n    def subsets(self, nums: list[int]) -> list[list[int]]:\n        pass", "test_cases": [{"call": "sorted([sorted(s) for s in Solution().subsets([1,2,3])])", "expected": "[[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_69_backtracking_permutations", "title": "Backtracking \u2014 permutations", "stub": "class Solution:\n    def permute(self, nums: list[int]) -> list[list[int]]:\n        pass", "test_cases": [{"call": "len(Solution().permute([1,2,3]))", "expected": "6"}, {"call": "sorted(Solution().permute([1,2]))", "expected": "[[1, 2], [2, 1]]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_70_backtracking_combination_sum_target", "title": "Backtracking \u2014 combination sum (target)", "stub": "class Solution:\n    def combination_sum(self, candidates: list[int], target: int) -> list[list[int]]:\n        pass", "test_cases": [{"call": "sorted([sorted(c) for c in Solution().combination_sum([2,3,6,7],7)])", "expected": "[[2, 2, 3], [7]]"}, {"call": "sorted([sorted(c) for c in Solution().combination_sum([2,3,5],8)])", "expected": "[[2, 2, 2, 2], [2, 3, 3], [3, 5]]"}], "tags": [], "difficulty": "medium"}, {"id": "drill_71_backtracking_n_queens", "title": "Backtracking \u2014 N-Queens", "stub": "class Solution:\n    def solve_n_queens(self, n: int) -> list[list[str]]:\n        pass", "test_cases": [{"call": "len(Solution().solve_n_queens(4))", "expected": "2"}, {"call": "len(Solution().solve_n_queens(1))", "expected": "1"}], "tags": [], "difficulty": "hard"}, {"id": "drill_72_kmp_pattern_matching_find_first_occurrence", "title": "KMP \u2014 pattern matching (find first occurrence)", "stub": "class Solution:\n    def str_str(self, haystack: str, needle: str) -> int:\n        pass", "test_cases": [{"call": "Solution().str_str(\"mississippi\",\"issip\")", "expected": "4"}, {"call": "Solution().str_str(\"hello\",\"ll\")", "expected": "2"}, {"call": "Solution().str_str(\"aaa\",\"aaaa\")", "expected": "-1"}], "tags": [], "difficulty": "hard"}, {"id": "drill_73_sieve_of_eratosthenes_count_primes_n", "title": "Sieve of Eratosthenes (count primes < n)", "stub": "class Solution:\n    def count_primes(self, n: int) -> int:\n        pass", "test_cases": [{"call": "Solution().count_primes(10)", "expected": "4"}, {"call": "Solution().count_primes(0)", "expected": "0"}, {"call": "Solution().count_primes(1)", "expected": "0"}], "tags": [], "difficulty": "medium"}];
 
         const app = {
             pyodide: null,
@@ -524,7 +519,6 @@
             customAlgos: JSON.parse(localStorage.getItem('algorep_custom_algorithms') || '[]'),
 
             async init() {
-                // Initialize CodeMirror immediately so we can reference it
                 this.editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
                     mode: "python",
                     theme: "monokai",
@@ -535,7 +529,6 @@
                     viewportMargin: Infinity
                 });
 
-                // Load Data
                 try {
                     const res = await fetch('./algorithms.json');
                     if(res.ok) {
@@ -543,18 +536,16 @@
                         this.algorithms = [...data, ...this.customAlgos];
                     } else {
                         console.warn("Fetch failed, using fallback algorithms.");
-                        this.algorithms = [...fallbackAlgorithms, ...this.customAlgos];
+                        this.algorithms = [...window.fallbackAlgorithms, ...this.customAlgos];
                     }
                 } catch(e) {
                     console.warn("Fetch error (likely CORS/file://), using fallback algorithms.", e);
-                    this.algorithms = [...fallbackAlgorithms, ...this.customAlgos];
+                    this.algorithms = [...window.fallbackAlgorithms, ...this.customAlgos];
                 }
 
-                // Populate PB Select
                 const pbSelect = document.getElementById('pb-select');
                 pbSelect.innerHTML = this.algorithms.map(a => `<option value="${a.id}">${a.title} (${a.difficulty.toUpperCase()})</option>`).join('');
 
-                // Load Pyodide
                 try {
                     this.pyodide = await loadPyodide();
                     document.getElementById('loading-overlay').style.display = 'none';
@@ -563,7 +554,7 @@
                     document.getElementById('loading-message').innerText = "Failed to load Python. Please check your internet connection and refresh.";
                     document.getElementById('loading-message').style.color = "var(--error)";
                     document.getElementById('loading-spinner').style.display = 'none';
-                    return; // Stop initialization
+                    return; 
                 }
                 
                 this.updateHomeStats();
@@ -580,6 +571,46 @@
                 this.updateHomeStats();
                 this.showView('view-home');
             },
+            
+            showProblemList() {
+                this.renderProblemList();
+                this.showView('view-problems');
+            },
+            renderProblemList(query = '') {
+                const tbody = document.querySelector('#problem-list-table tbody');
+                let pool = this.algorithms;
+                if(query) {
+                    pool = pool.filter(a => a.title.toLowerCase().includes(query.toLowerCase()) || 
+                                          (a.tags && a.tags.join(' ').toLowerCase().includes(query.toLowerCase())));
+                }
+                
+                tbody.innerHTML = pool.map(a => {
+                    const isMastered = !!this.personalBests[a.id];
+                    const statusIcon = isMastered ? '<span class="text-green" title="Mastered">✅</span>' : '<span style="color:var(--border-color);" title="Unsolved">⭕</span>';
+                    const diffBadge = `<span class="badge ${a.difficulty}">${a.difficulty}</span>`;
+                    return `<tr>
+                        <td style="text-align:center;">${statusIcon}</td>
+                        <td style="font-weight:600; color:var(--text-primary);">${a.title}</td>
+                        <td>${diffBadge}</td>
+                        <td><button class="btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="app.startPracticeFromList('${a.id}')">Practice</button></td>
+                    </tr>`;
+                }).join('');
+            },
+            filterProblemList(val) {
+                this.renderProblemList(val);
+            },
+            startPracticeFromList(id) {
+                this.mode = 'pb';
+                this.currentAlgo = this.algorithms.find(a => a.id === id);
+                this.setupPracticeUI();
+                this.showView('view-practice');
+                setTimeout(() => this.editor.refresh(), 50);
+                this.elapsedMs = 0;
+                this.startTime = Date.now();
+                clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => this.tickTimer(), 100);
+            },
+
             showModeSelect(mode) {
                 this.mode = mode;
                 document.getElementById('mode-title').innerText = mode === 'blitz' ? 'Blitz Mode Setup' : 'Personal Best Setup';
@@ -611,7 +642,7 @@
                     const tag = document.getElementById('blitz-tag').value.toLowerCase().trim();
                     
                     let pool = this.algorithms;
-                    if(tag) pool = pool.filter(a => a.tags && a.tags.some(t => t.toLowerCase().includes(tag)));
+                    if(tag) pool = pool.filter(a => a.tags && a.tags.some(t => t.toLowerCase().includes(tag)) || a.title.toLowerCase().includes(tag));
                     
                     this.blitzQueue = [...pool].sort(() => Math.random() - 0.5);
                     this.blitzResults = [];
@@ -638,10 +669,7 @@
                 this.setupPracticeUI();
                 this.showView('view-practice');
                 
-                // Extremely important: Force CodeMirror to redraw when it becomes visible inside the flex container
-                setTimeout(() => {
-                    this.editor.refresh();
-                }, 50);
+                setTimeout(() => this.editor.refresh(), 50);
                 
                 if(this.mode === 'pb') {
                     this.elapsedMs = 0;
@@ -659,7 +687,7 @@
                 badge.innerText = a.difficulty;
                 badge.className = `badge ${a.difficulty}`;
                 
-                document.getElementById('practice-mode-indicator').innerText = this.mode === 'blitz' ? 'Blitz Mode' : 'Personal Best Mode';
+                document.getElementById('practice-mode-indicator').innerText = this.mode === 'blitz' ? 'Blitz Mode' : 'Practice Session';
                 
                 if(this.mode === 'blitz') {
                     document.getElementById('btn-skip').style.display = 'inline-block';
@@ -673,7 +701,7 @@
 
                 let descHtml = ``;
                 a.test_cases.forEach((tc, i) => {
-                    descHtml += `<h4 style="margin: 20px 0 10px 0;">Example ${i+1}:</h4><pre><strong>Input:</strong> ${tc.call}\n<strong>Output:</strong> ${tc.expected}</pre>`;
+                    descHtml += `<h4 style="margin: 20px 0 10px 0;">Test Case ${i+1}:</h4><pre><strong>Input:</strong> ${tc.call}\n<strong>Expected Output:</strong> ${tc.expected}</pre>`;
                 });
                 if(a.tags && a.tags.length) {
                     descHtml += `<div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1rem;"><strong style="color: var(--text-secondary);">Tags:</strong><div style="margin-top: 8px;">${a.tags.map(t => `<span class="badge" style="background:var(--bg-layer-2); color:var(--text-primary); border: 1px solid var(--border-color); margin-right: 6px;">${t}</span>`).join('')}</div></div>`;
@@ -684,7 +712,6 @@
                 document.getElementById('output-panel').style.display = 'none';
                 document.getElementById('btn-submit').disabled = true;
                 
-                // Change run button state
                 const btnRun = document.getElementById('btn-run');
                 btnRun.innerText = 'Run Code';
                 btnRun.disabled = false;
@@ -724,7 +751,6 @@
                 document.getElementById('btn-submit').disabled = true;
                 btnRun.disabled = true;
 
-                // Safely pass code and test cases to Python globals to avoid JS string interpolation vulnerabilities
                 this.pyodide.globals.set("user_code", userCode);
                 this.pyodide.globals.set("test_cases_json", JSON.stringify(a.test_cases));
 
@@ -793,7 +819,7 @@ json.dumps({
                 if(res.exec_error) {
                     html += `<div class="text-red" style="margin-bottom: 1.5rem; background: rgba(239,71,67,0.1); padding: 15px; border-radius: 6px; border: 1px solid rgba(239,71,67,0.2);">
                         <strong style="display:block; margin-bottom: 8px;">Execution Error:</strong>
-                        <pre style="font-family: var(--font-mono); margin:0;">${res.exec_error}</pre>
+                        <pre style="font-family: var(--font-mono); margin:0; white-space: pre-wrap;">${res.exec_error}</pre>
                     </div>`;
                 }
                 
@@ -954,9 +980,15 @@ json.dumps({
                     return { title: algo ? algo.title : id, ...data };
                 }).sort((a,b) => a.best_time_ms - b.best_time_ms);
 
-                pbTbody.innerHTML = pbEntries.length ? pbEntries.map(p => `
-                    <tr><td style="font-weight:600;">${p.title}</td><td class="text-green" style="font-family: var(--font-mono); font-weight: 700;">${this.formatTime(p.best_time_ms)}</td><td>${p.attempt_count}</td></tr>
-                `).join('') : '<tr><td colspan="3" style="text-align:center; color:var(--text-secondary); padding: 2rem;">No personal bests achieved yet. Start practicing!</td></tr>';
+                pbTbody.innerHTML = pbEntries.length ? pbEntries.map((p, index) => {
+                    let rankBadge = '';
+                    if (index === 0) rankBadge = '🥇 ';
+                    else if (index === 1) rankBadge = '🥈 ';
+                    else if (index === 2) rankBadge = '🥉 ';
+                    else rankBadge = `${index + 1}. `;
+
+                    return `<tr><td style="font-weight:600;">${rankBadge}${p.title}</td><td class="text-green" style="font-family: var(--font-mono); font-weight: 700;">${this.formatTime(p.best_time_ms)}</td><td>${p.attempt_count}</td></tr>`;
+                }).join('') : '<tr><td colspan="3" style="text-align:center; color:var(--text-secondary); padding: 2rem;">No personal bests achieved yet. Start practicing!</td></tr>';
 
                 const allTbody = document.querySelector('#history-all-table tbody');
                 const sortedAttempts = [...this.attempts].sort((a,b) => b.timestamp - a.timestamp);
@@ -1011,11 +1043,6 @@ json.dumps({
                 
                 this.algorithms.push(obj);
                 
-                const jsonContainer = document.getElementById('add-json-output-container');
-                const jsonOutput = document.getElementById('add-json-output');
-                jsonOutput.value = JSON.stringify(obj, null, 2);
-                jsonContainer.style.display = 'block';
-
                 alert("Algorithm added successfully! It is now available to practice.");
                 
                 document.getElementById('add-id').value = '';
@@ -1031,7 +1058,6 @@ json.dumps({
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            // ensure initial UI state before init logic handles the heavy lifting
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             app.init();
         });
