@@ -1,0 +1,404 @@
+[
+  {
+    "id": "drill_31_serialize_deserialize_binary_tree",
+    "title": "Serialize / deserialize binary tree",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Codec:\n    def serialize(self, root: TreeNode) -> str:\n        pass\n    def deserialize(self, data: str) -> TreeNode:\n        pass",
+    "inputs_given": "root = TreeNode(1)\nroot.left = TreeNode(2)\nroot.right = TreeNode(3)\nroot.right.left = TreeNode(4)\nroot.right.right = TreeNode(5)",
+    "test_cases": [
+      {
+        "call": "c=Codec()\nres=c.deserialize('1,2,N,N,3,4,N,N,5,N,N')\nc.serialize(res)",
+        "expected": "'1,2,N,N,3,4,N,N,5,N,N'"
+      },
+      {
+        "call": "c=Codec()\nres=c.deserialize('N')\nc.serialize(res)",
+        "expected": "'N'"
+      },
+      {
+        "call": "c=Codec()\nres=c.deserialize('1,N,2,N,N')\nc.serialize(res)",
+        "expected": "'1,N,2,N,N'"
+      }
+    ],
+    "tags": [],
+    "difficulty": "hard",
+    "description": "Design an algorithm to serialize and deserialize a binary tree. The <code>serialize</code> method converts a tree to a string, and <code>deserialize</code> converts the string back to a tree.",
+    "solution_code": "class Codec:\n    def serialize(self, root: TreeNode) -> str:\n        vals = []\n        def dfs(node):\n            if not node:\n                vals.append(\"N\")\n                return\n            vals.append(str(node.val))\n            dfs(node.left)\n            dfs(node.right)\n        dfs(root)\n        return \",\".join(vals)\n\n    def deserialize(self, data: str) -> TreeNode:\n        vals = iter(data.split(\",\"))\n        def dfs():\n            val = next(vals)\n            if val == \"N\":\n                return None\n            node = TreeNode(int(val))\n            node.left = dfs()\n            node.right = dfs()\n            return node\n        return dfs()",
+    "solution_explanation": "Preorder traversal provides a natural serialization order because the root is processed first. By including explicit markers (like \"N\") for null pointers, we eliminate ambiguity about the tree's structure. During deserialization, an iterator makes it easy to process values exactly in the preorder sequence. The recursive `dfs` reconstruction naturally rebuilds subtrees from the iterator sequence.",
+    "when_to_use": "When you need to transmit a tree across a network or save it to a file. Preorder with null markers is optimal because it avoids the trailing nulls issue of level-order serialization and guarantees uniqueness."
+  },
+  {
+    "id": "drill_32_build_tree_from_preorder_inorder_arrays",
+    "title": "Build tree from preorder + inorder arrays",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def build_tree(self, preorder: list[int], inorder: list[int]) -> TreeNode:\n        pass",
+    "inputs_given": "preorder = [3, 9, 20, 15, 7]\ninorder  = [9, 3, 15, 20, 7]",
+    "test_cases": [
+      {
+        "call": "def ser(r):\n    return [] if not r else [r.val] + ser(r.left) + ser(r.right)\nser(Solution().build_tree([3,9,20,15,7], [9,3,15,20,7]))",
+        "expected": "[3, 9, 20, 15, 7]"
+      },
+      {
+        "call": "def ser(r):\n    return [] if not r else [r.val] + ser(r.left) + ser(r.right)\nser(Solution().build_tree([-1], [-1]))",
+        "expected": "[-1]"
+      },
+      {
+        "call": "def ser(r):\n    return [] if not r else [r.val] + ser(r.left) + ser(r.right)\nser(Solution().build_tree([1,2], [1,2]))",
+        "expected": "[1, 2]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given two integer arrays <code>preorder</code> and <code>inorder</code> where <code>preorder</code> is the preorder traversal of a binary tree and <code>inorder</code> is the inorder traversal of the same tree, construct and return the binary tree.",
+    "solution_code": "class Solution:\n    def build_tree(self, preorder: list[int], inorder: list[int]) -> TreeNode:\n        inorder_map = {val: i for i, val in enumerate(inorder)}\n        self.pre_idx = 0\n        \n        def build(left: int, right: int) -> TreeNode:\n            if left > right:\n                return None\n            \n            root_val = preorder[self.pre_idx]\n            self.pre_idx += 1\n            root = TreeNode(root_val)\n            \n            mid = inorder_map[root_val]\n            \n            root.left = build(left, mid - 1)\n            root.right = build(mid + 1, right)\n            \n            return root\n            \n        return build(0, len(inorder) - 1)",
+    "solution_explanation": "The first element in a preorder traversal is always the root. Once we know the root, we can find its position in the inorder traversal. Elements to the left of this position in the inorder array form the left subtree, and elements to the right form the right subtree. By tracking the boundaries (`left` and `right`) and using a hash map for $O(1)$ lookups in the inorder array, we can recursively build the tree in $O(N)$ time.",
+    "when_to_use": "When you need to uniquely reconstruct a binary tree from traversal arrays. Remember that you need *inorder* plus either *preorder* or *postorder* to uniquely define a tree (preorder + postorder is not enough unless the tree is strictly full)."
+  },
+  {
+    "id": "drill_33_reverse_linked_list_iterative",
+    "title": "Reverse linked list \u2014 iterative",
+    "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def reverse(self, head: ListNode) -> ListNode:\n        pass",
+    "inputs_given": "head = 1 -> 2 -> 3 -> 4 -> 5",
+    "test_cases": [
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\ndef ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().reverse(mk([1,2,3,4,5])))",
+        "expected": "[5, 4, 3, 2, 1]"
+      },
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\ndef ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().reverse(mk([1,2])))",
+        "expected": "[2, 1]"
+      },
+      {
+        "call": "def ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().reverse(None))",
+        "expected": "[]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given the <code>head</code> of a singly linked list, reverse the list, and return the reversed list.",
+    "solution_code": "class Solution:\n    def reverse(self, head: ListNode) -> ListNode:\n        prev = None\n        curr = head\n        while curr:\n            next_temp = curr.next\n            curr.next = prev\n            prev = curr\n            curr = next_temp\n        return prev",
+    "solution_explanation": "We maintain three pointers: `prev`, `curr`, and `next_temp`. In each iteration, we save the next node (`next_temp = curr.next`), reverse the current node's pointer (`curr.next = prev`), and then advance both `prev` and `curr` one step forward. The loop terminates when `curr` reaches `None`, at which point `prev` points to the new head of the reversed list.",
+    "when_to_use": "A fundamental building block for many linked list problems (e.g., checking palindromes, reordering lists, reversing in groups of k). Always prefer the iterative approach over recursive for $O(1)$ extra space."
+  },
+  {
+    "id": "drill_34_cycle_detection_floyd_s_tortoise_and_hare",
+    "title": "Cycle detection \u2014 Floyd's tortoise and hare",
+    "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def has_cycle(self, head: ListNode) -> bool:\n        pass",
+    "inputs_given": "head = 3 -> 2 -> 0 -> -4 -> (back to node at index 1)",
+    "test_cases": [
+      {
+        "call": "n1=ListNode(3)\nn2=ListNode(2)\nn3=ListNode(0)\nn4=ListNode(-4)\nn1.next=n2\nn2.next=n3\nn3.next=n4\nn4.next=n2\nSolution().has_cycle(n1)",
+        "expected": "True"
+      },
+      {
+        "call": "n1=ListNode(1)\nn2=ListNode(2)\nn1.next=n2\nSolution().has_cycle(n1)",
+        "expected": "False"
+      },
+      {
+        "call": "Solution().has_cycle(None)",
+        "expected": "False"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given <code>head</code>, the head of a linked list, determine if the linked list has a cycle in it.",
+    "solution_code": "class Solution:\n    def has_cycle(self, head: ListNode) -> bool:\n        slow = fast = head\n        while fast and fast.next:\n            slow = slow.next\n            fast = fast.next.next\n            if slow == fast:\n                return True\n        return False",
+    "solution_explanation": "Floyd's Tortoise and Hare algorithm uses two pointers moving at different speeds. `slow` moves 1 step, while `fast` moves 2 steps. If there's a cycle, the fast pointer will eventually overlap with the slow pointer (the distance between them decreases by 1 in each step, guaranteeing they meet). If `fast` reaches the end (`None`), the list is acyclic.",
+    "when_to_use": "To detect cycles in a linked list or sequence of states in $O(1)$ space. Also applicable for finding the duplicate number in an array when treating values as next-node pointers."
+  },
+  {
+    "id": "drill_35_find_middle_fast_slow_pointers",
+    "title": "Find middle \u2014 fast/slow pointers",
+    "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def find_middle(self, head: ListNode) -> ListNode:\n        pass",
+    "inputs_given": "head = 1 -> 2 -> 3 -> 4 -> 5",
+    "test_cases": [
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\nSolution().find_middle(mk([1,2,3,4,5])).val",
+        "expected": "3"
+      },
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\nSolution().find_middle(mk([1,2,3,4,5,6])).val",
+        "expected": "4"
+      },
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\nSolution().find_middle(mk([1])).val",
+        "expected": "1"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given the <code>head</code> of a singly linked list, return the middle node of the linked list. If there are two middle nodes, return the second middle node.",
+    "solution_code": "class Solution:\n    def find_middle(self, head: ListNode) -> ListNode:\n        slow = fast = head\n        while fast and fast.next:\n            slow = slow.next\n            fast = fast.next.next\n        return slow",
+    "solution_explanation": "By advancing `fast` by two steps and `slow` by one step, `slow` will reach exactly the midpoint when `fast` reaches the end of the list. For a list of even length, this standard formulation returns the second middle node (since `fast` lands on `None`).",
+    "when_to_use": "When you need to split a linked list into two halves, such as during Merge Sort on a linked list, or verifying if a linked list is a palindrome."
+  },
+  {
+    "id": "drill_36_remove_nth_node_from_end_two_pointer_gap",
+    "title": "Remove Nth node from end (two-pointer gap)",
+    "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def remove_nth(self, head: ListNode, n: int) -> ListNode:\n        pass",
+    "inputs_given": "head = 1 -> 2 -> 3 -> 4 -> 5\nn = 2",
+    "test_cases": [
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\ndef ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().remove_nth(mk([1,2,3,4,5]), 2))",
+        "expected": "[1, 2, 3, 5]"
+      },
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\ndef ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().remove_nth(mk([1]), 1))",
+        "expected": "[]"
+      },
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\ndef ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().remove_nth(mk([1,2]), 2))",
+        "expected": "[2]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given the <code>head</code> of a linked list, remove the <code>n</code>-th node from the end of the list and return its head.",
+    "solution_code": "class Solution:\n    def remove_nth(self, head: ListNode, n: int) -> ListNode:\n        dummy = ListNode(0, head)\n        left = dummy\n        right = head\n        \n        for _ in range(n):\n            right = right.next\n            \n        while right:\n            left = left.next\n            right = right.next\n            \n        left.next = left.next.next\n        return dummy.next",
+    "solution_explanation": "We use a two-pointer approach with a fixed gap of `n` nodes. By advancing `right` by `n` steps first, the distance between `left` and `right` becomes `n`. Then, moving both pointers at the same speed until `right` hits the end guarantees `left` will be exactly positioned at the node *before* the one we want to remove. Using a `dummy` node handles the edge case where the head itself needs to be removed.",
+    "when_to_use": "Whenever you need to identify or modify an element based on its offset from the *end* of a singly linked list in a single pass."
+  },
+  {
+    "id": "drill_37_merge_two_sorted_lists",
+    "title": "Merge two sorted lists",
+    "stub": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def merge(self, l1: ListNode, l2: ListNode) -> ListNode:\n        pass",
+    "inputs_given": "l1 = 1 -> 2 -> 4\nl2 = 1 -> 3 -> 4",
+    "test_cases": [
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\ndef ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().merge(mk([1,2,4]), mk([1,3,4])))",
+        "expected": "[1, 1, 2, 3, 4, 4]"
+      },
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\ndef ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().merge(None, None))",
+        "expected": "[]"
+      },
+      {
+        "call": "def mk(vs):\n    if not vs: return None\n    h=t=ListNode(vs[0])\n    for v in vs[1:]:t.next=ListNode(v);t=t.next\n    return h\ndef ls(h):\n    r=[]\n    while h:r.append(h.val);h=h.next\n    return r\nls(Solution().merge(None, mk([0])))",
+        "expected": "[0]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "You are given the heads of two sorted linked lists <code>l1</code> and <code>l2</code>. Merge the two lists into one sorted list.",
+    "solution_code": "class Solution:\n    def merge(self, l1: ListNode, l2: ListNode) -> ListNode:\n        dummy = ListNode()\n        tail = dummy\n        \n        while l1 and l2:\n            if l1.val <= l2.val:\n                tail.next = l1\n                l1 = l1.next\n            else:\n                tail.next = l2\n                l2 = l2.next\n            tail = tail.next\n            \n        tail.next = l1 if l1 else l2\n        return dummy.next",
+    "solution_explanation": "We maintain a `dummy` head to simplify the insertion logic and a `tail` pointer to build the new list. In each iteration, we compare the current nodes of both lists and append the smaller one to `tail.next`. Once one list is exhausted, we can just attach the remainder of the other list directly in $O(1)$ time, which avoids needing to traverse the rest.",
+    "when_to_use": "The merge step of Merge Sort for linked lists. This logic extends easily to merging $K$ sorted lists by using a min-heap to pick the smallest element from the $K$ lists."
+  },
+  {
+    "id": "drill_38_stack_bracket_matching_valid_parentheses",
+    "title": "Stack \u2014 bracket matching (valid parentheses)",
+    "stub": "class Solution:\n    def is_valid(self, s: str) -> bool:\n        pass",
+    "inputs_given": "s = \"()[]{}\"",
+    "test_cases": [
+      {
+        "call": "Solution().is_valid('()[]{}')",
+        "expected": "True"
+      },
+      {
+        "call": "Solution().is_valid('(]')",
+        "expected": "False"
+      },
+      {
+        "call": "Solution().is_valid(']')",
+        "expected": "False"
+      },
+      {
+        "call": "Solution().is_valid('((()))')",
+        "expected": "True"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given a string <code>s</code> containing just the characters <code>'(', ')', '{', '}', '['</code> and <code>']'</code>, determine if the input string is valid.",
+    "solution_code": "class Solution:\n    def is_valid(self, s: str) -> bool:\n        stack = []\n        mapping = {')': '(', '}': '{', ']': '['}\n        \n        for char in s:\n            if char in mapping:\n                top_element = stack.pop() if stack else '#'\n                if mapping[char] != top_element:\n                    return False\n            else:\n                stack.append(char)\n                \n        return not stack",
+    "solution_explanation": "Stacks operate on a Last-In-First-Out (LIFO) principle, which exactly aligns with the rules of nested brackets (the most recently opened bracket must be closed first). We iterate through the string, pushing opening brackets onto the stack. When we see a closing bracket, we pop from the stack and verify it's the matching opening bracket.",
+    "when_to_use": "Parsing nested structures (e.g., JSON, HTML, expressions), matching brackets, or evaluating syntactic correctness."
+  },
+  {
+    "id": "drill_39_stack_evaluate_reverse_polish_notation",
+    "title": "Stack \u2014 evaluate reverse polish notation",
+    "stub": "class Solution:\n    def eval_rpn(self, tokens: list[str]) -> int:\n        pass",
+    "inputs_given": "tokens = [\"2\",\"1\",\"+\",\"3\",\"*\"]",
+    "test_cases": [
+      {
+        "call": "Solution().eval_rpn(['2','1','+','3','*'])",
+        "expected": "9"
+      },
+      {
+        "call": "Solution().eval_rpn(['4','13','5','/','+'])",
+        "expected": "6"
+      },
+      {
+        "call": "Solution().eval_rpn(['10','6','9','3','+','-11','*','/','*','17','+','5','+'])",
+        "expected": "22"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Evaluate the value of an arithmetic expression in Reverse Polish Notation. Valid operators are <code>+, -, *, /</code>.",
+    "solution_code": "class Solution:\n    def eval_rpn(self, tokens: list[str]) -> int:\n        stack = []\n        for token in tokens:\n            if token in {\"+\", \"-\", \"*\", \"/\"}:\n                b, a = stack.pop(), stack.pop()\n                if token == \"+\": stack.append(a + b)\n                elif token == \"-\": stack.append(a - b)\n                elif token == \"*\": stack.append(a * b)\n                else: stack.append(int(a / b))\n            else:\n                stack.append(int(token))\n        return stack[0]",
+    "solution_explanation": "Reverse Polish Notation is designed to be evaluated using a stack without needing parentheses. Operands are pushed onto the stack. When an operator is encountered, it is applied to the top two operands popped from the stack (remembering that the first popped is the *right* operand), and the result is pushed back. Note: `int(a / b)` correctly truncates toward zero in Python.",
+    "when_to_use": "When evaluating postfix expressions or designing simple expression evaluators / calculators."
+  },
+  {
+    "id": "drill_40_monotonic_stack_next_greater_element",
+    "title": "Monotonic stack \u2014 next greater element",
+    "stub": "class Solution:\n    def next_greater(self, nums: list[int]) -> list[int]:\n        pass",
+    "inputs_given": "nums = [2, 1, 2, 4, 3]",
+    "test_cases": [
+      {
+        "call": "Solution().next_greater([2,1,2,4,3])",
+        "expected": "[4, 2, 4, -1, -1]"
+      },
+      {
+        "call": "Solution().next_greater([1,3,2])",
+        "expected": "[3, -1, -1]"
+      },
+      {
+        "call": "Solution().next_greater([5,4,3,2,1])",
+        "expected": "[-1, -1, -1, -1, -1]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given an array <code>nums</code>, find the next greater element for each element in the array. Return an array of the same size. If no greater element exists, output <code>-1</code>.",
+    "solution_code": "class Solution:\n    def next_greater(self, nums: list[int]) -> list[int]:\n        res = [-1] * len(nums)\n        stack = []\n        \n        for i, val in enumerate(nums):\n            while stack and nums[stack[-1]] < val:\n                idx = stack.pop()\n                res[idx] = val\n            stack.append(i)\n            \n        return res",
+    "solution_explanation": "We maintain a monotonically decreasing stack of *indices*. For each element, we check if it is greater than the element at the index currently on top of the stack. If it is, this current element is the \"next greater element\" for the element at the top index. We pop and update our result array until the stack top is greater, then push the current index. Each element is pushed and popped at most once, making it $O(N)$.",
+    "when_to_use": "For \"next greater/smaller element\" queries across an array. Commonly used in daily temperatures, largest rectangle in histogram, and stock span problems."
+  },
+  {
+    "id": "drill_41_monotonic_deque_sliding_window_maximum",
+    "title": "Monotonic deque \u2014 sliding window maximum",
+    "stub": "from collections import deque\n\nclass Solution:\n    def max_sliding_window(self, nums: list[int], k: int) -> list[int]:\n        pass",
+    "inputs_given": "nums = [1, 3, -1, -3, 5, 3, 6, 7]\nk = 3",
+    "test_cases": [
+      {
+        "call": "Solution().max_sliding_window([1,3,-1,-3,5,3,6,7], 3)",
+        "expected": "[3, 3, 5, 5, 6, 7]"
+      },
+      {
+        "call": "Solution().max_sliding_window([1], 1)",
+        "expected": "[1]"
+      },
+      {
+        "call": "Solution().max_sliding_window([1,-1], 1)",
+        "expected": "[1, -1]"
+      },
+      {
+        "call": "Solution().max_sliding_window([7,2,4], 2)",
+        "expected": "[7, 4]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "hard",
+    "description": "You are given an array of integers <code>nums</code>, there is a sliding window of size <code>k</code> which is moving from the very left of the array to the very right. Return the max sliding window.",
+    "solution_code": "from collections import deque\n\nclass Solution:\n    def max_sliding_window(self, nums: list[int], k: int) -> list[int]:\n        res = []\n        q = deque()\n        \n        for i, val in enumerate(nums):\n            while q and q[0] < i - k + 1:\n                q.popleft()\n                \n            while q and nums[q[-1]] < val:\n                q.pop()\n                \n            q.append(i)\n            \n            if i >= k - 1:\n                res.append(nums[q[0]])\n                \n        return res",
+    "solution_explanation": "We maintain a monotonically decreasing doubly-linked queue (`deque`) of indices. The index of the absolute maximum in the current window is always at `q[0]`. As the window slides, we: 1) Remove indices from the left that are out of bounds. 2) Remove indices from the right whose values are smaller than the incoming value, as they can never be the maximum now that a larger, newer value exists. 3) Push the new index. 4) Record the maximum `nums[q[0]]`.",
+    "when_to_use": "Whenever you need to query the maximum or minimum in a dynamically moving fixed-size window in $O(N)$ time."
+  },
+  {
+    "id": "drill_42_merge_intervals_sort_greedy",
+    "title": "Merge intervals (sort + greedy)",
+    "stub": "class Solution:\n    def merge(self, intervals: list[list[int]]) -> list[list[int]]:\n        pass",
+    "inputs_given": "intervals = [[1,3],[2,6],[8,10],[15,18]]",
+    "test_cases": [
+      {
+        "call": "Solution().merge([[1,3],[2,6],[8,10],[15,18]])",
+        "expected": "[[1, 6], [8, 10], [15, 18]]"
+      },
+      {
+        "call": "Solution().merge([[1,4],[4,5]])",
+        "expected": "[[1, 5]]"
+      },
+      {
+        "call": "Solution().merge([[1,4],[2,3]])",
+        "expected": "[[1, 4]]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given an array of <code>intervals</code> where <code>intervals[i] = [start, end]</code>, merge all overlapping intervals.",
+    "solution_code": "class Solution:\n    def merge(self, intervals: list[list[int]]) -> list[list[int]]:\n        intervals.sort(key=lambda x: x[0])\n        res = [intervals[0]]\n        \n        for start, end in intervals[1:]:\n            last_end = res[-1][1]\n            \n            if start <= last_end:\n                res[-1][1] = max(last_end, end)\n            else:\n                res.append([start, end])\n                \n        return res",
+    "solution_explanation": "First, sorting by the start time guarantees that intervals can only overlap if they are adjacent in the sorted array. As we iterate, if the current interval starts before or at the end of the last recorded interval, they overlap, and we greedily extend the last interval's end to the maximum of both. Otherwise, they are disjoint, and we append the new interval.",
+    "when_to_use": "Unifying overlapping ranges or checking for overlap in scheduling/time problems."
+  },
+  {
+    "id": "drill_43_insert_interval_merge_with_new_interval",
+    "title": "Insert interval (merge with new interval)",
+    "stub": "class Solution:\n    def insert(self, intervals: list[list[int]], new: list[int]) -> list[list[int]]:\n        pass",
+    "inputs_given": "intervals = [[1,3],[6,9]]\nnew = [2,5]",
+    "test_cases": [
+      {
+        "call": "Solution().insert([[1,3],[6,9]], [2,5])",
+        "expected": "[[1, 5], [6, 9]]"
+      },
+      {
+        "call": "Solution().insert([[1,2],[3,5],[6,7],[8,10],[12,16]], [4,8])",
+        "expected": "[[1, 2], [3, 10], [12, 16]]"
+      },
+      {
+        "call": "Solution().insert([], [5,7])",
+        "expected": "[[5, 7]]"
+      },
+      {
+        "call": "Solution().insert([[1,5]], [2,3])",
+        "expected": "[[1, 5]]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "You are given an array of non-overlapping intervals sorted by their start time, and a <code>new</code> interval. Insert the new interval into the array (merge if necessary).",
+    "solution_code": "class Solution:\n    def insert(self, intervals: list[list[int]], new_interval: list[int]) -> list[list[int]]:\n        res = []\n        i = 0\n        n = len(intervals)\n        \n        while i < n and intervals[i][1] < new_interval[0]:\n            res.append(intervals[i])\n            i += 1\n            \n        while i < n and intervals[i][0] <= new_interval[1]:\n            new_interval[0] = min(new_interval[0], intervals[i][0])\n            new_interval[1] = max(new_interval[1], intervals[i][1])\n            i += 1\n        res.append(new_interval)\n        \n        while i < n:\n            res.append(intervals[i])\n            i += 1\n            \n        return res",
+    "solution_explanation": "The list is already sorted, so we can do this in $O(N)$ time instead of $O(N \\log N)$ sorting. The logic is handled in three distinct phases: 1) Add all intervals that strictly end before `new_interval` starts. 2) Greedily merge all intervals that overlap with `new_interval`, updating `new_interval`'s bounds. 3) Push the merged `new_interval`, followed by the remaining untouched intervals.",
+    "when_to_use": "When injecting a single event/range into an already-sorted, non-overlapping collection of ranges."
+  },
+  {
+    "id": "drill_44_greedy_interval_scheduling_minimum_arrows",
+    "title": "Greedy interval scheduling (minimum arrows)",
+    "stub": "class Solution:\n    def find_min_arrows(self, points: list[list[int]]) -> int:\n        pass",
+    "inputs_given": "points = [[10,16],[2,8],[1,6],[7,12]]",
+    "test_cases": [
+      {
+        "call": "Solution().find_min_arrows([[10,16],[2,8],[1,6],[7,12]])",
+        "expected": "2"
+      },
+      {
+        "call": "Solution().find_min_arrows([[1,2],[3,4],[5,6],[7,8]])",
+        "expected": "4"
+      },
+      {
+        "call": "Solution().find_min_arrows([[1,2],[2,3],[3,4],[4,5]])",
+        "expected": "2"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "There are some spherical balloons taped onto a flat wall. You are given a 2D integer array <code>points</code> where <code>points[i] = [start, end]</code>. Return the minimum number of arrows that must be shot to burst all balloons.",
+    "solution_code": "class Solution:\n    def find_min_arrows(self, points: list[list[int]]) -> int:\n        if not points: return 0\n        \n        points.sort(key=lambda x: x[1])\n        arrows = 1\n        current_end = points[0][1]\n        \n        for start, end in points[1:]:\n            if start > current_end:\n                arrows += 1\n                current_end = end\n                \n        return arrows",
+    "solution_explanation": "To burst balloons efficiently, we should shoot our arrows at the overlapping intersections. By sorting by the *end* coordinate, we ensure we process intervals in the order they must be dealt with. We place our first arrow greedily at the end of the first interval (`current_end`). Any subsequent interval that starts before or at `current_end` is burst by this arrow. As soon as an interval starts after `current_end`, we need a new arrow.",
+    "when_to_use": "Finding the maximum number of non-overlapping intervals, or minimum points to cover all intervals (classic activity selection problem). Always sort by *end* time for activity selection."
+  },
+  {
+    "id": "drill_45_kth_largest_element_min_heap_of_size_k",
+    "title": "Kth largest element (min-heap of size k)",
+    "stub": "import heapq\n\nclass Solution:\n    def kth_largest(self, nums: list[int], k: int) -> int:\n        pass",
+    "inputs_given": "nums = [3, 2, 1, 5, 6, 4]\nk = 2",
+    "test_cases": [
+      {
+        "call": "Solution().kth_largest([3,2,1,5,6,4], 2)",
+        "expected": "5"
+      },
+      {
+        "call": "Solution().kth_largest([3,2,3,1,2,4,5,5,6], 4)",
+        "expected": "4"
+      },
+      {
+        "call": "Solution().kth_largest([1], 1)",
+        "expected": "1"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given an integer array <code>nums</code> and an integer <code>k</code>, return the <code>k</code>-th largest element in the array.",
+    "solution_code": "import heapq\n\nclass Solution:\n    def kth_largest(self, nums: list[int], k: int) -> int:\n        min_heap = []\n        for num in nums:\n            heapq.heappush(min_heap, num)\n            if len(min_heap) > k:\n                heapq.heappop(min_heap)\n        return min_heap[0]",
+    "solution_explanation": "A min-heap keeps the smallest element at the top. By maintaining a min-heap of exactly size `k`, we essentially hold the $k$ largest elements seen so far. When the heap exceeds size `k`, we pop the top element, which is the smallest of the $(k+1)$ largest elements, thus discarding it. At the end, the top of the heap is the smallest of the top $k$ elements\u2014which precisely equals the $k$-th largest element in the array.",
+    "when_to_use": "Finding the top $K$ largest or smallest elements in a stream of data or large array without fully sorting ($O(N \\log K)$ vs $O(N \\log N)$)."
+  }
+]

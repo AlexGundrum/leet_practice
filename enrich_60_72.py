@@ -1,0 +1,175 @@
+import json
+import os
+import ast
+
+with open('c:/Users/alexg/code/leet_practice/algorithms.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+subset = data[60:73]
+
+enrichment = {
+    "drill_61_2d_dp_unique_paths_grid": {
+        "solution_code": "class Solution:\n    def unique_paths(self, m: int, n: int) -> int:\n        row = [1] * n\n        for i in range(m - 1):\n            new_row = [1] * n\n            for j in range(n - 2, -1, -1):\n                new_row[j] = new_row[j + 1] + row[j]\n            row = new_row\n        return row[0]",
+        "solution_explanation": "We can solve this problem using dynamic programming. The state DP(i, j) represents the number of unique paths to reach the bottom-right corner from square (i, j). We can move either right or down, so DP(i, j) = DP(i + 1, j) + DP(i, j + 1). The base cases are the last row and last column, where there is only 1 path (moving straight down or straight right). To optimize space from O(M * N) to O(N), we only need to keep track of the current row and the row below it. In fact, just a single 1D array of size N is sufficient since we process row by row.",
+        "when_to_use": "Use 2D DP when you need to count paths or find optimal paths in a grid where movements are restricted (e.g., only right and down).",
+        "test_cases": [
+            {"call": "Solution().unique_paths(3, 7)", "expected": "28"},
+            {"call": "Solution().unique_paths(3, 2)", "expected": "3"},
+            {"call": "Solution().unique_paths(1, 1)", "expected": "1"},
+            {"call": "Solution().unique_paths(7, 3)", "expected": "28"}
+        ]
+    },
+    "drill_62_2d_dp_minimum_path_sum_grid": {
+        "solution_code": "class Solution:\n    def min_path_sum(self, grid: list[list[int]]) -> int:\n        ROWS, COLS = len(grid), len(grid[0])\n        res = [[float('inf')] * (COLS + 1) for _ in range(ROWS + 1)]\n        res[ROWS - 1][COLS] = 0\n        \n        for r in range(ROWS - 1, -1, -1):\n            for c in range(COLS - 1, -1, -1):\n                res[r][c] = grid[r][c] + min(res[r + 1][c], res[r][c + 1])\n                \n        return res[0][0]",
+        "solution_explanation": "This is a 2D dynamic programming problem. The state `dp[r][c]` stores the minimum path sum to get from `(r, c)` to the bottom-right corner. The recurrence relation is `dp[r][c] = grid[r][c] + min(dp[r+1][c], dp[r][c+1])` because from `(r, c)` we can only move down or right. We can build this table bottom-up, initializing an extra row and column with infinity to seamlessly handle boundary conditions, except for the cell directly below the destination, which is set to 0. A space optimization could modify the `grid` in-place or use an O(N) row array.",
+        "when_to_use": "Use this approach for grid pathfinding problems where movements are strictly down and right, and each cell has a non-negative cost.",
+        "test_cases": [
+            {"call": "Solution().min_path_sum([[1,3,1],[1,5,1],[4,2,1]])", "expected": "7"},
+            {"call": "Solution().min_path_sum([[1,2,3],[4,5,6]])", "expected": "12"},
+            {"call": "Solution().min_path_sum([[1]])", "expected": "1"},
+            {"call": "Solution().min_path_sum([[1, 2], [3, 4]])", "expected": "7"}
+        ]
+    },
+    "drill_63_0_1_knapsack_partition_equal_subset_sum": {
+        "solution_code": "class Solution:\n    def can_partition(self, nums: list[int]) -> bool:\n        total_sum = sum(nums)\n        if total_sum % 2 != 0:\n            return False\n        \n        target = total_sum // 2\n        dp = set()\n        dp.add(0)\n        \n        for num in nums:\n            next_dp = set()\n            for t in dp:\n                if t + num == target:\n                    return True\n                next_dp.add(t + num)\n                next_dp.add(t)\n            dp = next_dp\n            \n        return True if target in dp else False",
+        "solution_explanation": "This translates to a 0/1 Knapsack problem where we want to find if there is a subset of `nums` that sums exactly to `sum(nums) / 2`. If the sum of all elements is odd, it's impossible. Otherwise, we maintain a set of all possible sums we can generate using elements seen so far. For each number in the array, we can either include it in a subset or exclude it. We iterate through our existing possible sums and add the new number to each, forming a new set of possible sums. If `target` is reached, we return True.",
+        "when_to_use": "Use 0/1 Knapsack logic when you need to select a subset of items to achieve a specific target weight/sum, where each item can only be chosen once.",
+        "test_cases": [
+            {"call": "Solution().can_partition([1, 5, 11, 5])", "expected": "True"},
+            {"call": "Solution().can_partition([1, 2, 3, 5])", "expected": "False"},
+            {"call": "Solution().can_partition([1, 1])", "expected": "True"},
+            {"call": "Solution().can_partition([2])", "expected": "False"}
+        ]
+    },
+    "drill_64_interval_dp_burst_balloons": {
+        "solution_code": "class Solution:\n    def max_coins(self, nums: list[int]) -> int:\n        nums = [1] + nums + [1]\n        n = len(nums)\n        dp = [[0] * n for _ in range(n)]\n        \n        for length in range(2, n):\n            for left in range(n - length):\n                right = left + length\n                for i in range(left + 1, right):\n                    coins = nums[left] * nums[i] * nums[right]\n                    coins += dp[left][i] + dp[i][right]\n                    dp[left][right] = max(dp[left][right], coins)\n                    \n        return dp[0][n - 1]",
+        "solution_explanation": "This problem uses Interval DP. Instead of thinking about which balloon to burst first, we think about which balloon is burst LAST in the interval `(left, right)`. Suppose `i` is the last balloon to burst. It will then be adjacent to `left` and `right`. The maximum coins we can get by bursting balloons in `(left, right)` is `nums[left] * nums[i] * nums[right]` plus the maximum coins from the interval `(left, i)` and `(i, right)`. We pad the array with `1`s on both ends and build up the DP table based on the length of the interval.",
+        "when_to_use": "Use Interval DP for problems where the state depends on shrinking or expanding contiguous subsegments, often looking at the \"last action\" performed.",
+        "test_cases": [
+            {"call": "Solution().max_coins([3, 1, 5, 8])", "expected": "167"},
+            {"call": "Solution().max_coins([1, 5])", "expected": "10"},
+            {"call": "Solution().max_coins([])", "expected": "0"},
+            {"call": "Solution().max_coins([7, 9, 8, 0, 7, 1, 3, 5, 5, 2, 3])", "expected": "1717"}
+        ]
+    },
+    "drill_65_dp_memoization_word_break": {
+        "solution_code": "class Solution:\n    def word_break(self, s: str, word_dict: list[str]) -> bool:\n        word_set = set(word_dict)\n        memo = {}\n        \n        def dfs(i):\n            if i == len(s):\n                return True\n            if i in memo:\n                return memo[i]\n                \n            for j in range(i + 1, len(s) + 1):\n                if s[i:j] in word_set and dfs(j):\n                    memo[i] = True\n                    return True\n                    \n            memo[i] = False\n            return False\n            \n        return dfs(0)",
+        "solution_explanation": "We can model this as a backtracking problem and optimize it using memoization. `dfs(i)` returns True if `s[i:]` can be segmented into words. To calculate `dfs(i)`, we try splitting the string at every index `j > i`. If `s[i:j]` is a valid word and the suffix `s[j:]` (i.e. `dfs(j)`) can also be segmented, then `dfs(i)` is True. We memoize the results for each index `i` so we don't recalculate suffixes we've already seen.",
+        "when_to_use": "Use DP + memoization for string segmentation or partition problems where overlapping subproblems (e.g., verifying the same suffix repeatedly) exist.",
+        "test_cases": [
+            {"call": "Solution().word_break('leetcode', ['leet', 'code'])", "expected": "True"},
+            {"call": "Solution().word_break('applepenapple', ['apple', 'pen'])", "expected": "True"},
+            {"call": "Solution().word_break('catsandog', ['cats', 'dog', 'sand', 'and', 'cat'])", "expected": "False"},
+            {"call": "Solution().word_break('a', ['b'])", "expected": "False"}
+        ]
+    },
+    "drill_66_bitmask_dp_minimum_xor_sum_assignment": {
+        "solution_code": "class Solution:\n    def minimum_xor_sum(self, nums1: list[int], nums2: list[int]) -> int:\n        n = len(nums1)\n        memo = {}\n        \n        def dfs(i, mask):\n            if i == n:\n                return 0\n            if mask in memo:\n                return memo[mask]\n                \n            res = float('inf')\n            for j in range(n):\n                if not (mask & (1 << j)):\n                    res = min(res, (nums1[i] ^ nums2[j]) + dfs(i + 1, mask | (1 << j)))\n                    \n            memo[mask] = res\n            return res\n            \n        return dfs(0, 0)",
+        "solution_explanation": "This is a minimum assignment problem, which can be solved with bitmask DP due to the small array size constraint (N <= 14). The `mask` represents the elements from `nums2` that have already been assigned. In state `(i, mask)`, we are assigning an element from `nums2` to `nums1[i]`. We iterate over all unassigned elements `j` in `nums2`, assign `nums2[j]` to `nums1[i]`, and recursively compute the minimum XOR sum for the remaining elements. Memoization ensures that each state `mask` is computed at most once.",
+        "when_to_use": "Use Bitmask DP when assigning elements between two small sets (N <= 20) to track which elements have been used/visited without needing an array.",
+        "test_cases": [
+            {"call": "Solution().minimum_xor_sum([1,2], [2,3])", "expected": "2"},
+            {"call": "Solution().minimum_xor_sum([1,0,3], [5,3,4])", "expected": "8"},
+            {"call": "Solution().minimum_xor_sum([1], [1])", "expected": "0"},
+            {"call": "Solution().minimum_xor_sum([1,2,3], [1,2,3])", "expected": "0"}
+        ]
+    },
+    "drill_67_trie_build_from_scratch_insert_search_startswith": {
+        "solution_code": "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\n\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n        \n    def insert(self, word: str) -> None:\n        curr = self.root\n        for char in word:\n            if char not in curr.children:\n                curr.children[char] = TrieNode()\n            curr = curr.children[char]\n        curr.is_end = True\n        \n    def search(self, word: str) -> bool:\n        curr = self.root\n        for char in word:\n            if char not in curr.children:\n                return False\n            curr = curr.children[char]\n        return curr.is_end\n        \n    def starts_with(self, prefix: str) -> bool:\n        curr = self.root\n        for char in prefix:\n            if char not in curr.children:\n                return False\n            curr = curr.children[char]\n        return True",
+        "solution_explanation": "A Trie is a tree where each node represents a character. Building strings path by path from the root. For `insert`, we traverse the string, creating new `TrieNode`s when a character isn't a child of the current node. We mark `is_end = True` on the last character's node. For `search`, we trace the word; if we reach the end and `is_end` is True, the word exists. `starts_with` works exactly like `search`, except it returns True immediately after successfully tracing the prefix.",
+        "when_to_use": "Use a Trie for prefix-based searches, auto-complete, or efficiently storing and searching a large set of strings.",
+        "test_cases": [
+            {"call": "t=Trie(); t.insert('apple'); result = [t.search('apple'), t.search('app'), t.starts_with('app')]", "expected": "[True, False, True]"},
+            {"call": "t=Trie(); t.insert('app'); result = [t.search('app'), t.starts_with('ap')]", "expected": "[True, True]"},
+            {"call": "t=Trie(); t.insert('hello'); t.insert('hell'); result = [t.search('hell'), t.search('hello')]", "expected": "[True, True]"},
+            {"call": "t=Trie(); result = [t.search('a'), t.starts_with('a')]", "expected": "[False, False]"}
+        ]
+    },
+    "drill_68_backtracking_subsets_power_set": {
+        "solution_code": "class Solution:\n    def subsets(self, nums: list[int]) -> list[list[int]]:\n        res = []\n        subset = []\n        \n        def dfs(i):\n            if i >= len(nums):\n                res.append(subset.copy())\n                return\n            \n            # Decision to include nums[i]\n            subset.append(nums[i])\n            dfs(i + 1)\n            \n            # Decision NOT to include nums[i]\n            subset.pop()\n            dfs(i + 1)\n            \n        dfs(0)\n        return res",
+        "solution_explanation": "This backtracking solution builds the power set by making a binary choice for each element: either include it in the current subset, or don't. We use a helper `dfs(i)` where `i` is the index of the element we are currently deciding on. When `i == len(nums)`, we've made decisions for all elements, so we append a copy of the current subset to `res`. We ensure to `pop()` the element after the recursive call that includes it, restoring the state for the branch that excludes it.",
+        "when_to_use": "Use backtracking when generating all combinations, permutations, or subsets of a given sequence without constraints.",
+        "test_cases": [
+            {"call": "sorted([sorted(s) for s in Solution().subsets([1,2,3])])", "expected": "[[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]"},
+            {"call": "Solution().subsets([0])", "expected": "[[], [0]]"},
+            {"call": "Solution().subsets([])", "expected": "[[]]"},
+            {"call": "sorted([sorted(s) for s in Solution().subsets([1,2])])", "expected": "[[], [1], [1, 2], [2]]"}
+        ]
+    },
+    "drill_69_backtracking_permutations": {
+        "solution_code": "class Solution:\n    def permute(self, nums: list[int]) -> list[list[int]]:\n        res = []\n        \n        def backtrack(start):\n            if start == len(nums):\n                res.append(nums[:])\n                return\n                \n            for i in range(start, len(nums)):\n                nums[start], nums[i] = nums[i], nums[start]\n                backtrack(start + 1)\n                nums[start], nums[i] = nums[i], nums[start]\n                \n        backtrack(0)\n        return res",
+        "solution_explanation": "Permutations refer to all possible orderings of a list. We can solve this with backtracking by swapping elements. At each level of the recursive call `backtrack(start)`, the `start` index indicates the position we are choosing an element for. We iterate through `i` from `start` to `len(nums) - 1`, swapping `nums[start]` with `nums[i]`. After making the swap, we recurse on `start + 1`. We then swap back to backtrack. When `start == len(nums)`, we've assigned all positions and record a copy of `nums`.",
+        "when_to_use": "Use when you need to explore all possible orderings of an array, which requires an O(N!) time complexity approach.",
+        "test_cases": [
+            {"call": "sorted(Solution().permute([1,2,3]))", "expected": "[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]"},
+            {"call": "Solution().permute([0,1])", "expected": "[[0, 1], [1, 0]]"},
+            {"call": "Solution().permute([1])", "expected": "[[1]]"},
+            {"call": "Solution().permute([])", "expected": "[[]]"}
+        ]
+    },
+    "drill_70_backtracking_combination_sum_target": {
+        "solution_code": "class Solution:\n    def combination_sum(self, candidates: list[int], target: int) -> list[list[int]]:\n        res = []\n        \n        def dfs(i, cur, total):\n            if total == target:\n                res.append(cur.copy())\n                return\n            if i >= len(candidates) or total > target:\n                return\n                \n            cur.append(candidates[i])\n            dfs(i, cur, total + candidates[i])\n            \n            cur.pop()\n            dfs(i + 1, cur, total)\n            \n        dfs(0, [], 0)\n        return res",
+        "solution_explanation": "To find combinations summing to a target where elements can be reused, we use a backtracking approach. `dfs(i, cur, total)` explores branches where we either: 1. Keep taking the `candidates[i]` (hence recursively calling `dfs(i)` again to allow multiple picks), or 2. Stop picking `candidates[i]` and move to the next candidate (popping it off `cur` and calling `dfs(i + 1)`). The base cases terminate successfully when `total == target` and prune when `total > target` or we run out of candidates.",
+        "when_to_use": "Use when finding all possible sets that achieve a given constraint (like a sum) from an array with infinite supply of items.",
+        "test_cases": [
+            {"call": "sorted([sorted(c) for c in Solution().combination_sum([2,3,6,7], 7)])", "expected": "[[2, 2, 3], [7]]"},
+            {"call": "sorted([sorted(c) for c in Solution().combination_sum([2,3,5], 8)])", "expected": "[[2, 2, 2, 2], [2, 3, 3], [3, 5]]"},
+            {"call": "Solution().combination_sum([2], 1)", "expected": "[]"},
+            {"call": "Solution().combination_sum([1], 2)", "expected": "[[1, 1]]"}
+        ]
+    },
+    "drill_71_backtracking_n_queens": {
+        "solution_code": "class Solution:\n    def solve_n_queens(self, n: int) -> list[list[str]]:\n        col = set()\n        posDiag = set() # r + c\n        negDiag = set() # r - c\n        res = []\n        board = [[\".\"] * n for _ in range(n)]\n        \n        def backtrack(r):\n            if r == n:\n                res.append([\"\".join(row) for row in board])\n                return\n            for c in range(n):\n                if c in col or (r + c) in posDiag or (r - c) in negDiag:\n                    continue\n                \n                col.add(c)\n                posDiag.add(r + c)\n                negDiag.add(r - c)\n                board[r][c] = \"Q\"\n                \n                backtrack(r + 1)\n                \n                col.remove(c)\n                posDiag.remove(r + c)\n                negDiag.remove(r - c)\n                board[r][c] = \".\"\n                \n        backtrack(0)\n        return res",
+        "solution_explanation": "This models the N-Queens placement using backtracking row by row. To quickly check if placing a queen at `(r, c)` is valid, we use three sets to track columns and diagonals. The positive diagonal (bottom-left to top-right) shares a constant sum `r + c`. The negative diagonal (top-left to bottom-right) shares a constant difference `r - c`. If a column or diagonal is occupied, we skip `c`. Otherwise, we place a queen, update sets, and try placing a queen in row `r + 1`.",
+        "when_to_use": "Use state-tracking sets in backtracking to efficiently validate constraints when searching a large 2D space for valid permutations.",
+        "test_cases": [
+            {"call": "len(Solution().solve_n_queens(4))", "expected": "2"},
+            {"call": "len(Solution().solve_n_queens(1))", "expected": "1"},
+            {"call": "len(Solution().solve_n_queens(5))", "expected": "10"},
+            {"call": "len(Solution().solve_n_queens(2))", "expected": "0"}
+        ]
+    },
+    "drill_72_kmp_pattern_matching_find_first_occurrence": {
+        "solution_code": "class Solution:\n    def str_str(self, haystack: str, needle: str) -> int:\n        if needle == \"\": return 0\n        lps = [0] * len(needle)\n        \n        prevLPS, i = 0, 1\n        while i < len(needle):\n            if needle[i] == needle[prevLPS]:\n                lps[i] = prevLPS + 1\n                prevLPS += 1\n                i += 1\n            elif prevLPS == 0:\n                lps[i] = 0\n                i += 1\n            else:\n                prevLPS = lps[prevLPS - 1]\n                \n        i = j = 0\n        while i < len(haystack):\n            if haystack[i] == needle[j]:\n                i, j = i + 1, j + 1\n            else:\n                if j == 0:\n                    i += 1\n                else:\n                    j = lps[j - 1]\n            if j == len(needle):\n                return i - len(needle)\n        return -1",
+        "solution_explanation": "The Knuth-Morris-Pratt (KMP) algorithm efficiently finds `needle` in `haystack` in O(N+M) time. It precomputes a Longest Prefix Suffix (LPS) array for `needle` which tells us the length of the longest proper prefix that is also a suffix up to each index. This prevents re-evaluating matched characters. When traversing `haystack`, if characters match, we increment both indices. On a mismatch, instead of returning to the start, `j` jumps to `lps[j-1]`, bypassing known matched characters.",
+        "when_to_use": "Use KMP when searching for exact substring occurrences inside a larger string linearly, optimizing out the naive O(N*M) worst case.",
+        "test_cases": [
+            {"call": "Solution().str_str(\"mississippi\", \"issip\")", "expected": "4"},
+            {"call": "Solution().str_str(\"hello\", \"ll\")", "expected": "2"},
+            {"call": "Solution().str_str(\"aaa\", \"aaaa\")", "expected": "-1"},
+            {"call": "Solution().str_str(\"a\", \"a\")", "expected": "0"}
+        ]
+    },
+    "drill_73_sieve_of_eratosthenes_count_primes_n": {
+        "solution_code": "class Solution:\n    def count_primes(self, n: int) -> int:\n        if n <= 2:\n            return 0\n            \n        is_prime = [True] * n\n        is_prime[0] = is_prime[1] = False\n        \n        for i in range(2, int(n ** 0.5) + 1):\n            if is_prime[i]:\n                for j in range(i * i, n, i):\n                    is_prime[j] = False\n                    \n        return sum(is_prime)",
+        "solution_explanation": "The Sieve of Eratosthenes generates all primes up to `n` in O(N log(log N)) time. We maintain a boolean array `is_prime` initialized to True. We iterate from `i = 2` to `sqrt(n)`. If `i` is a prime, we know its multiples cannot be primes, so we mark them False. We start marking from `i * i` because any smaller multiple of `i` (like `i * 2`, `i * 3`) will have already been marked by smaller primes. The answer is simply the count of True values remaining in the array.",
+        "when_to_use": "Use the Sieve algorithm whenever you need to find all prime numbers up to a limit or repeatedly check primality up to a certain range.",
+        "test_cases": [
+            {"call": "Solution().count_primes(10)", "expected": "4"},
+            {"call": "Solution().count_primes(0)", "expected": "0"},
+            {"call": "Solution().count_primes(1)", "expected": "0"},
+            {"call": "Solution().count_primes(2)", "expected": "0"}
+        ]
+    }
+}
+
+# Verify AST parse correctness before writing!
+for item_id, item_data in enrichment.items():
+    for tc in item_data['test_cases']:
+        try:
+            ast.parse(tc['call'])
+            ast.parse(tc['expected'])
+        except Exception as e:
+            print(f"AST Parsing Failed in {item_id}: {tc}")
+            print(f"Error: {e}")
+            exit(1)
+
+for item in subset:
+    item_id = item['id']
+    if item_id in enrichment:
+        item.update(enrichment[item_id])
+
+with open('c:/Users/alexg/code/leet_practice/enriched_batch_60_72.json', 'w', encoding='utf-8') as f:
+    json.dump(subset, f, indent=2)
+
+print("done")

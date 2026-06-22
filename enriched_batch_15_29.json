@@ -1,0 +1,392 @@
+[
+  {
+    "id": "drill_16_topo_sort_dfs_postorder",
+    "title": "Topo sort \u2014 DFS postorder",
+    "stub": "class Solution:\n    def topo_sort(self, n: int, edges: list[list[int]]) -> list[int]:\n        pass",
+    "inputs_given": "n = 4\nedges = [[0,1],[0,2],[1,3],[2,3]]",
+    "test_cases": [
+      {
+        "call": "Solution().topo_sort(4, [[1,0],[2,0],[3,1],[3,2]])",
+        "expected": "[3, 1, 2, 0]"
+      },
+      {
+        "call": "Solution().topo_sort(2, [[1,0],[0,1]])",
+        "expected": "[]"
+      },
+      {
+        "call": "Solution().topo_sort(3, [[0,1],[1,2]])",
+        "expected": "[0, 1, 2]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given <code>n</code> nodes and a list of directed edges where <code>edges[i] = [u, v]</code> indicates a directed edge from <code>u</code> to <code>v</code>, return a valid topological sort array using DFS postorder reversal. Assume the graph is a DAG.",
+    "solution_code": "class Solution:\n    def topo_sort(self, n: int, edges: list[list[int]]) -> list[int]:\n        adj = {i: [] for i in range(n)}\n        for u, v in edges:\n            adj[u].append(v)\n            \n        visited = [0] * n # 0: unvisited, 1: visiting, 2: visited\n        order = []\n        \n        def dfs(node):\n            if visited[node] == 1:\n                return False\n            if visited[node] == 2:\n                return True\n            \n            visited[node] = 1\n            for neighbor in adj[node]:\n                if not dfs(neighbor):\n                    return False\n            visited[node] = 2\n            order.append(node)\n            return True\n            \n        for i in range(n):\n            if visited[i] == 0:\n                if not dfs(i):\n                    return []\n                    \n        return order[::-1]",
+    "solution_explanation": "We perform DFS to build a topological ordering. The key is to keep track of node states: 'unvisited' (0), 'visiting' (1), and 'visited' (2). If we encounter a node in the 'visiting' state, it means we have found a cycle, which prevents a valid topological sort. After fully exploring all descendants of a node, we mark it as 'visited' and add it to our postorder list. Reversing this postorder list yields the valid topological order.",
+    "when_to_use": "Use Topological Sort when you need to resolve dependencies or find a valid sequence of tasks in a Directed Acyclic Graph (DAG) (e.g., course scheduling, build systems)."
+  },
+  {
+    "id": "drill_17_dijkstra_s_min_heap_single_source",
+    "title": "Dijkstra's (min-heap, single source)",
+    "stub": "import heapq\n\nclass Solution:\n    def dijkstra(self, n: int, edges: list[list[int]], src: int) -> list[int]:\n        pass",
+    "inputs_given": "n = 5\nedges = [[0,1,4],[0,2,1],[2,1,2],[1,3,1],[2,3,5]]\nsrc = 0",
+    "test_cases": [
+      {
+        "call": "Solution().dijkstra(5, [[0,1,2],[0,2,4],[1,2,1],[1,3,7],[2,4,3],[3,4,1]], 0)",
+        "expected": "[0, 2, 3, 9, 6]"
+      },
+      {
+        "call": "Solution().dijkstra(3, [[0,1,5]], 0)",
+        "expected": "[0, 5, -1]"
+      },
+      {
+        "call": "Solution().dijkstra(1, [], 0)",
+        "expected": "[0]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given <code>n</code> nodes and a list of directed weighted edges where <code>edges[i] = [u, v, weight]</code>, find the shortest path from the <code>src</code> node to all other nodes. Return an array of size <code>n</code> where the value at index <code>i</code> is the shortest distance to node <code>i</code>. If a node is unreachable, the value should be <code>-1</code>.",
+    "solution_code": "import heapq\n\nclass Solution:\n    def dijkstra(self, n: int, edges: list[list[int]], src: int) -> list[int]:\n        adj = {i: [] for i in range(n)}\n        for u, v, w in edges:\n            adj[u].append((v, w))\n            \n        dist = [float('inf')] * n\n        dist[src] = 0\n        min_heap = [(0, src)] # (distance, node)\n        \n        while min_heap:\n            d, node = heapq.heappop(min_heap)\n            \n            if d > dist[node]:\n                continue\n                \n            for neighbor, weight in adj[node]:\n                new_dist = d + weight\n                if new_dist < dist[neighbor]:\n                    dist[neighbor] = new_dist\n                    heapq.heappush(min_heap, (new_dist, neighbor))\n                    \n        return [d if d != float('inf') else -1 for d in dist]",
+    "solution_explanation": "Dijkstra's algorithm finds the shortest path from a single source node to all other nodes in a graph with non-negative edge weights. It uses a min-heap to always explore the closest reachable node next. The condition `d > dist[node]` is crucial to skip processing a node if we already found a shorter path to it before popping this particular entry from the heap. We update neighbors and push them to the heap if a shorter path is found.",
+    "when_to_use": "Use Dijkstra's when you need the shortest path from a single source to all other nodes (or a specific target) in a graph with NO negative edge weights."
+  },
+  {
+    "id": "drill_18_bellman_ford_handles_negative_weights",
+    "title": "Bellman-Ford (handles negative weights)",
+    "stub": "class Solution:\n    def bellman_ford(self, n: int, edges: list[list[int]], src: int) -> list[int]:\n        pass",
+    "inputs_given": "n = 5\nedges = [[0,1,-1],[0,2,4],[1,2,3],[1,3,2],[1,4,2],[3,2,5],[3,1,1],[4,3,-3]]\nsrc = 0",
+    "test_cases": [
+      {
+        "call": "Solution().bellman_ford(3, [[0,1,2],[1,2,-5],[0,2,1]], 0)",
+        "expected": "[0, 2, -3]"
+      },
+      {
+        "call": "Solution().bellman_ford(3, [[0,1,2],[1,2,-5],[2,0,1]], 0)",
+        "expected": "[]"
+      },
+      {
+        "call": "Solution().bellman_ford(4, [[0,1,1],[1,2,1],[2,3,1]], 0)",
+        "expected": "[0, 1, 2, 3]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given <code>n</code> nodes and a list of directed weighted edges where <code>edges[i] = [u, v, weight]</code> (weights can be negative), find the shortest path from the <code>src</code> node to all other nodes. Return an array of size <code>n</code> where the value at index <code>i</code> is the shortest distance to node <code>i</code>. If a node is unreachable, the value should be <code>-1</code>.",
+    "solution_code": "class Solution:\n    def bellman_ford(self, n: int, edges: list[list[int]], src: int) -> list[int]:\n        dist = [float('inf')] * n\n        dist[src] = 0\n        \n        for _ in range(n - 1):\n            for u, v, w in edges:\n                if dist[u] != float('inf') and dist[u] + w < dist[v]:\n                    dist[v] = dist[u] + w\n                    \n        # Check for negative weight cycles\n        for u, v, w in edges:\n            if dist[u] != float('inf') and dist[u] + w < dist[v]:\n                return [] # Negative cycle detected\n                \n        return [d if d != float('inf') else -1 for d in dist]",
+    "solution_explanation": "Bellman-Ford finds the shortest paths from a single source to all nodes, handling negative edge weights. It relaxes all edges `n-1` times, which is the maximum number of edges in a simple shortest path. If we can still relax an edge on the `n`th iteration, the graph contains a negative weight cycle, and shortest paths are undefined (returning empty). The check `dist[u] != inf` prevents adding weights to unreachable nodes.",
+    "when_to_use": "Use Bellman-Ford for single-source shortest path problems when the graph may contain negative edge weights, or when you explicitly need to detect negative weight cycles."
+  },
+  {
+    "id": "drill_19_floyd_warshall_all_pairs_shortest_path",
+    "title": "Floyd-Warshall (all-pairs shortest path)",
+    "stub": "class Solution:\n    def floyd_warshall(self, n: int, edges: list[list[int]]) -> list[list[int]]:\n        pass",
+    "inputs_given": "n = 4\nedges = [[0,1,3],[0,3,7],[1,0,8],[1,2,2],[2,0,5],[2,3,1],[3,0,2]]",
+    "test_cases": [
+      {
+        "call": "Solution().floyd_warshall(4, [[0,1,3],[1,2,1],[2,3,2],[0,3,10]])",
+        "expected": "[[0, 3, 4, 6], [-1, 0, 1, 3], [-1, -1, 0, 2], [-1, -1, -1, 0]]"
+      },
+      {
+        "call": "Solution().floyd_warshall(3, [[0,1,1],[1,2,-1],[0,2,5]])",
+        "expected": "[[0, 1, 0], [-1, 0, -1], [-1, -1, 0]]"
+      },
+      {
+        "call": "Solution().floyd_warshall(2, [[0,1,2],[1,0,3]])",
+        "expected": "[[0, 2], [3, 0]]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given <code>n</code> nodes and a list of directed weighted edges where <code>edges[i] = [u, v, weight]</code>, find the shortest path between all pairs of nodes. Return an <code>n x n</code> matrix where <code>matrix[i][j]</code> is the shortest distance from <code>i</code> to <code>j</code>.",
+    "solution_code": "class Solution:\n    def floyd_warshall(self, n: int, edges: list[list[int]]) -> list[list[int]]:\n        dist = [[float('inf')] * n for _ in range(n)]\n        \n        for i in range(n):\n            dist[i][i] = 0\n            \n        for u, v, w in edges:\n            dist[u][v] = min(dist[u][v], w)\n            \n        for k in range(n):\n            for i in range(n):\n                for j in range(n):\n                    if dist[i][k] != float('inf') and dist[k][j] != float('inf'):\n                        dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])\n                        \n        # Replace inf with -1\n        return [[d if d != float('inf') else -1 for d in row] for row in dist]",
+    "solution_explanation": "Floyd-Warshall is a dynamic programming algorithm for the All-Pairs Shortest Path problem. The state transition evaluates if a path from `i` to `j` is shorter when routed through an intermediate node `k`. We iteratively allow nodes `0` to `n-1` as intermediate nodes. The time complexity is O(V^3), making it suitable only for small graphs.",
+    "when_to_use": "Use Floyd-Warshall when you need the shortest path between ALL pairs of nodes in a small graph (typically V <= 400). Also handles negative weights but not negative cycles."
+  },
+  {
+    "id": "drill_20_prim_s_mst_min_heap_adjacency_list",
+    "title": "Prim's MST (min-heap, adjacency list)",
+    "stub": "import heapq\n\nclass Solution:\n    def prims(self, n: int, edges: list[list[int]]) -> int:\n        pass",
+    "inputs_given": "n = 4\nedges = [[0,1,1],[0,2,4],[1,2,2],[1,3,5],[2,3,1]]",
+    "test_cases": [
+      {
+        "call": "Solution().prims(4, [[0,1,1],[0,2,4],[1,2,2],[1,3,5],[2,3,1]])",
+        "expected": "4"
+      },
+      {
+        "call": "Solution().prims(3, [[0,1,5]])",
+        "expected": "-1"
+      },
+      {
+        "call": "Solution().prims(1, [])",
+        "expected": "0"
+      }
+    ],
+    "tags": [],
+    "difficulty": "hard",
+    "description": "Given <code>n</code> nodes and a list of undirected weighted edges where <code>edges[i] = [u, v, weight]</code>, return the total weight of the Minimum Spanning Tree (MST).",
+    "solution_code": "import heapq\n\nclass Solution:\n    def prims(self, n: int, edges: list[list[int]]) -> int:\n        adj = {i: [] for i in range(n)}\n        for u, v, w in edges:\n            adj[u].append((v, w))\n            adj[v].append((u, w))\n            \n        min_heap = [(0, 0)] # (weight, node)\n        visited = set()\n        total_weight = 0\n        \n        while min_heap and len(visited) < n:\n            weight, node = heapq.heappop(min_heap)\n            \n            if node in visited:\n                continue\n                \n            visited.add(node)\n            total_weight += weight\n            \n            for neighbor, edge_weight in adj[node]:\n                if neighbor not in visited:\n                    heapq.heappush(min_heap, (edge_weight, neighbor))\n                    \n        return total_weight if len(visited) == n else -1",
+    "solution_explanation": "Prim's algorithm builds a Minimum Spanning Tree (MST) by starting from an arbitrary node (0) and greedily expanding the tree. It uses a min-heap to always pick the smallest weight edge that connects a node in the tree to a node outside the tree. A `visited` set ensures we don't form cycles. If the graph is disconnected, `len(visited)` won't reach `n`, so we return -1.",
+    "when_to_use": "Use Prim's algorithm for finding the Minimum Spanning Tree in dense undirected graphs, where E is closer to V^2."
+  },
+  {
+    "id": "drill_21_kruskal_s_mst_sort_edges_union_find",
+    "title": "Kruskal's MST (sort edges + union-find)",
+    "stub": "class Solution:\n    def kruskals(self, n: int, edges: list[list[int]]) -> int:\n        pass",
+    "inputs_given": "n = 4\nedges = [[0,1,1],[0,2,4],[1,2,2],[1,3,5],[2,3,1]]",
+    "test_cases": [
+      {
+        "call": "Solution().kruskals(4, [[0,1,1],[0,2,4],[1,2,2],[1,3,5],[2,3,1]])",
+        "expected": "4"
+      },
+      {
+        "call": "Solution().kruskals(4, [[0,1,1],[2,3,1]])",
+        "expected": "-1"
+      },
+      {
+        "call": "Solution().kruskals(1, [])",
+        "expected": "0"
+      }
+    ],
+    "tags": [],
+    "difficulty": "hard",
+    "description": "Given <code>n</code> nodes and a list of undirected weighted edges where <code>edges[i] = [u, v, weight]</code>, return the total weight of the Minimum Spanning Tree (MST).",
+    "solution_code": "class Solution:\n    def kruskals(self, n: int, edges: list[list[int]]) -> int:\n        parent = list(range(n))\n        rank = [0] * n\n        \n        def find(i):\n            if parent[i] != i:\n                parent[i] = find(parent[i])\n            return parent[i]\n            \n        def union(i, j):\n            root_i = find(i)\n            root_j = find(j)\n            if root_i != root_j:\n                if rank[root_i] < rank[root_j]:\n                    parent[root_i] = root_j\n                elif rank[root_i] > rank[root_j]:\n                    parent[root_j] = root_i\n                else:\n                    parent[root_j] = root_i\n                    rank[root_i] += 1\n                return True\n            return False\n            \n        edges.sort(key=lambda x: x[2])\n        total_weight = 0\n        edges_used = 0\n        \n        for u, v, w in edges:\n            if union(u, v):\n                total_weight += w\n                edges_used += 1\n                if edges_used == n - 1:\n                    break\n                    \n        return total_weight if edges_used == n - 1 and n > 0 else (0 if n == 1 else -1)",
+    "solution_explanation": "Kruskal's algorithm finds the Minimum Spanning Tree by sorting all edges by weight, and then adding them one by one to the tree. It uses a Disjoint Set Union (Union-Find) data structure to keep track of connected components and efficiently check if adding an edge would create a cycle (if both endpoints have the same root). It stops early once `n - 1` edges are added.",
+    "when_to_use": "Use Kruskal's algorithm to find the Minimum Spanning Tree in sparse graphs, or when edges are already sorted or easily sortable."
+  },
+  {
+    "id": "drill_22_union_find_path_compression_union_by_rank",
+    "title": "Union-Find \u2014 path compression + union by rank",
+    "stub": "class UnionFind:\n    def __init__(self, n: int):\n        pass\n    def find(self, x: int) -> int:\n        pass\n    def union(self, x: int, y: int) -> bool:\n        pass\n\nclass Solution:\n    def count_components(self, n: int, edges: list[list[int]]) -> int:\n        pass",
+    "inputs_given": "n = 5\nedges = [[0,1],[1,2],[3,4]]",
+    "test_cases": [
+      {
+        "call": "Solution().count_components(5, [[0,1],[1,2],[3,4]])",
+        "expected": "2"
+      },
+      {
+        "call": "Solution().count_components(5, [[0,1],[1,2],[2,3],[3,4]])",
+        "expected": "1"
+      },
+      {
+        "call": "Solution().count_components(3, [])",
+        "expected": "3"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Implement a <code>UnionFind</code> class with path compression and union by rank. Then, use it to solve the connected components problem: given <code>n</code> nodes and undirected <code>edges</code> (where <code>edges[i] = [u, v]</code>), return the number of connected components.",
+    "solution_code": "class UnionFind:\n    def __init__(self, n: int):\n        self.parent = list(range(n))\n        self.rank = [1] * n\n        self.count = n\n\n    def find(self, x: int) -> int:\n        if self.parent[x] != x:\n            self.parent[x] = self.find(self.parent[x]) # Path compression\n        return self.parent[x]\n\n    def union(self, x: int, y: int) -> bool:\n        root_x = self.find(x)\n        root_y = self.find(y)\n        if root_x != root_y:\n            if self.rank[root_x] > self.rank[root_y]:\n                self.parent[root_y] = root_x\n            elif self.rank[root_x] < self.rank[root_y]:\n                self.parent[root_x] = root_y\n            else:\n                self.parent[root_y] = root_x\n                self.rank[root_x] += 1\n            self.count -= 1\n            return True\n        return False\n\nclass Solution:\n    def count_components(self, n: int, edges: list[list[int]]) -> int:\n        uf = UnionFind(n)\n        for u, v in edges:\n            uf.union(u, v)\n        return uf.count",
+    "solution_explanation": "Union-Find is implemented with Path Compression (`find` flattens the tree structure) and Union by Rank (always attach the smaller tree under the root of the deeper tree). This bounds the time complexity to almost O(1) per operation (inverse Ackermann function). By keeping a `count` variable that decrements on successful unions, we can track the number of connected components efficiently.",
+    "when_to_use": "Use Union-Find when dynamically connecting components, detecting cycles in undirected graphs, or finding the number of connected components."
+  },
+  {
+    "id": "drill_23_tarjan_s_bridges_critical_connections",
+    "title": "Tarjan's bridges (critical connections)",
+    "stub": "class Solution:\n    def critical_connections(self, n: int, connections: list[list[int]]) -> list[list[int]]:\n        pass",
+    "inputs_given": "n = 4\nconnections = [[0,1],[1,2],[2,0],[1,3]]",
+    "test_cases": [
+      {
+        "call": "sorted([sorted(e) for e in Solution().critical_connections(4, [[0,1],[1,2],[2,0],[1,3]])])",
+        "expected": "[[1, 3]]"
+      },
+      {
+        "call": "sorted([sorted(e) for e in Solution().critical_connections(2, [[0,1]])])",
+        "expected": "[[0, 1]]"
+      },
+      {
+        "call": "sorted([sorted(e) for e in Solution().critical_connections(5, [[0,1],[1,2],[2,0],[1,3],[3,4],[4,1]])])",
+        "expected": "[]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "hard",
+    "description": "There are <code>n</code> servers numbered from <code>0</code> to <code>n - 1</code> connected by undirected server-to-server connections forming a network where <code>connections[i] = [a, b]</code>. Return a list of all critical connections (bridges) in the network.",
+    "solution_code": "class Solution:\n    def critical_connections(self, n: int, connections: list[list[int]]) -> list[list[int]]:\n        adj = {i: [] for i in range(n)}\n        for u, v in connections:\n            adj[u].append(v)\n            adj[v].append(u)\n            \n        discovery = [-1] * n\n        lowest = [-1] * n\n        self.time = 0\n        bridges = []\n        \n        def dfs(node, parent):\n            discovery[node] = lowest[node] = self.time\n            self.time += 1\n            \n            for neighbor in adj[node]:\n                if neighbor == parent:\n                    continue\n                if discovery[neighbor] == -1: # unvisited\n                    dfs(neighbor, node)\n                    lowest[node] = min(lowest[node], lowest[neighbor])\n                    if lowest[neighbor] > discovery[node]:\n                        bridges.append([node, neighbor])\n                else:\n                    lowest[node] = min(lowest[node], discovery[neighbor])\n                    \n        dfs(0, -1)\n        return bridges",
+    "solution_explanation": "Tarjan's algorithm finds bridges (critical connections) in an undirected graph. We track the `discovery` time and the `lowest` reachable discovery time for each node. During DFS, if the lowest reachable time of a neighbor `v` from node `u` is strictly greater than `u`'s discovery time (`lowest[v] > discovery[u]`), it means `v` has no back-edge to `u` or its ancestors. Thus, `(u, v)` is the only way to reach `v` and is a bridge.",
+    "when_to_use": "Use Tarjan's bridge-finding algorithm to identify critical paths or single points of failure in an undirected network (e.g., removing the edge would split the graph)."
+  },
+  {
+    "id": "drill_24_preorder_traversal_iterative_root_left_right",
+    "title": "Preorder traversal \u2014 iterative (root, left, right)",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def preorder(self, root: TreeNode) -> list[int]:\n        pass",
+    "inputs_given": "root = TreeNode(1)\nroot.right = TreeNode(2)\nroot.right.left = TreeNode(3)",
+    "test_cases": [
+      {
+        "call": "r=TreeNode(1); r.right=TreeNode(2); r.right.left=TreeNode(3); Solution().preorder(r)",
+        "expected": "[1, 2, 3]"
+      },
+      {
+        "call": "Solution().preorder(None)",
+        "expected": "[]"
+      },
+      {
+        "call": "r=TreeNode(1); r.left=TreeNode(2); r.right=TreeNode(3); Solution().preorder(r)",
+        "expected": "[1, 2, 3]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given the <code>root</code> of a binary tree, return the preorder traversal of its nodes' values iteratively.",
+    "solution_code": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def preorder(self, root: TreeNode) -> list[int]:\n        if not root:\n            return []\n        \n        stack = [root]\n        res = []\n        \n        while stack:\n            node = stack.pop()\n            res.append(node.val)\n            # Push right child first so left child is popped first (LIFO)\n            if node.right:\n                stack.append(node.right)\n            if node.left:\n                stack.append(node.left)\n                \n        return res",
+    "solution_explanation": "Iterative preorder traversal processes nodes in Root -> Left -> Right order. We use a stack initialized with the root. On each step, we pop a node, visit it (append value), and then push its right child followed by its left child. Pushing the right child first ensures the left child is at the top of the stack and processed next, preserving the Preorder sequence.",
+    "when_to_use": "Use iterative preorder when you need to serialize a tree, copy a tree structure, or generally avoid recursive stack overflow on deep trees."
+  },
+  {
+    "id": "drill_25_inorder_traversal_iterative_left_root_right",
+    "title": "Inorder traversal \u2014 iterative (left, root, right)",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def inorder(self, root: TreeNode) -> list[int]:\n        pass",
+    "inputs_given": "root = TreeNode(1)\nroot.right = TreeNode(2)\nroot.right.left = TreeNode(3)",
+    "test_cases": [
+      {
+        "call": "r=TreeNode(1); r.right=TreeNode(2); r.right.left=TreeNode(3); Solution().inorder(r)",
+        "expected": "[1, 3, 2]"
+      },
+      {
+        "call": "Solution().inorder(None)",
+        "expected": "[]"
+      },
+      {
+        "call": "r=TreeNode(2); r.left=TreeNode(1); r.right=TreeNode(3); Solution().inorder(r)",
+        "expected": "[1, 2, 3]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given the <code>root</code> of a binary tree, return the inorder traversal of its nodes' values iteratively.",
+    "solution_code": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def inorder(self, root: TreeNode) -> list[int]:\n        stack = []\n        res = []\n        curr = root\n        \n        while curr or stack:\n            while curr:\n                stack.append(curr)\n                curr = curr.left\n                \n            curr = stack.pop()\n            res.append(curr.val)\n            curr = curr.right\n            \n        return res",
+    "solution_explanation": "Iterative inorder traversal (Left -> Root -> Right). We traverse as far left as possible, pushing nodes onto the stack. When we reach a null node, we pop from the stack, visit the node, and then move to its right subtree. This perfectly mimics the call stack of a recursive inorder traversal.",
+    "when_to_use": "Use iterative inorder traversal for Binary Search Trees (BSTs) when you need to process elements in sorted order efficiently without recursion."
+  },
+  {
+    "id": "drill_26_postorder_traversal_iterative_left_right_root",
+    "title": "Postorder traversal \u2014 iterative (left, right, root)",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def postorder(self, root: TreeNode) -> list[int]:\n        pass",
+    "inputs_given": "root = TreeNode(1)\nroot.right = TreeNode(2)\nroot.right.left = TreeNode(3)",
+    "test_cases": [
+      {
+        "call": "r=TreeNode(1); r.right=TreeNode(2); r.right.left=TreeNode(3); Solution().postorder(r)",
+        "expected": "[3, 2, 1]"
+      },
+      {
+        "call": "Solution().postorder(None)",
+        "expected": "[]"
+      },
+      {
+        "call": "r=TreeNode(1); r.left=TreeNode(2); r.right=TreeNode(3); Solution().postorder(r)",
+        "expected": "[2, 3, 1]"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given the <code>root</code> of a binary tree, return the postorder traversal of its nodes' values iteratively.",
+    "solution_code": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def postorder(self, root: TreeNode) -> list[int]:\n        if not root:\n            return []\n            \n        stack = [root]\n        res = []\n        \n        while stack:\n            node = stack.pop()\n            res.append(node.val)\n            # Push left child first so right child is popped first\n            if node.left:\n                stack.append(node.left)\n            if node.right:\n                stack.append(node.right)\n                \n        # Result is Root -> Right -> Left. Reverse to get Left -> Right -> Root\n        return res[::-1]",
+    "solution_explanation": "Iterative postorder (Left -> Right -> Root) is trickier. A clean way is to generate a modified preorder traversal (Root -> Right -> Left) by reversing the push order of children. Then, reverse the entire resulting list to get Left -> Right -> Root. This avoids complex state tracking on the stack.",
+    "when_to_use": "Use iterative postorder when you need to process children before their parents (e.g., deleting a tree, evaluating expression trees, aggregating values from subtrees) without recursion."
+  },
+  {
+    "id": "drill_27_lca_binary_tree_dfs_recursive",
+    "title": "LCA \u2014 binary tree (DFS recursive)",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def lca(self, root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode:\n        pass",
+    "inputs_given": "root = [3,5,1,6,2,0,8,null,null,7,4]\np = node(5), q = node(1)",
+    "test_cases": [
+      {
+        "call": "r=TreeNode(3); r.left=TreeNode(5); r.right=TreeNode(1); Solution().lca(r, r.left, r.right).val",
+        "expected": "3"
+      },
+      {
+        "call": "r=TreeNode(1); r.left=TreeNode(2); Solution().lca(r, r, r.left).val",
+        "expected": "1"
+      },
+      {
+        "call": "r=TreeNode(1); p=TreeNode(2); q=TreeNode(3); r.left=p; r.right=q; p.left=TreeNode(4); Solution().lca(r, p.left, q).val",
+        "expected": "1"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given a binary tree, find the lowest common ancestor (LCA) of two given nodes <code>p</code> and <code>q</code> in the tree.",
+    "solution_code": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def lca(self, root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode:\n        if not root or root == p or root == q:\n            return root\n            \n        left = self.lca(root.left, p, q)\n        right = self.lca(root.right, p, q)\n        \n        if left and right:\n            return root\n            \n        return left if left else right",
+    "solution_explanation": "This recursive DFS searches for nodes `p` and `q`. The base case returns the node if it equals `p`, `q`, or null. We search both the left and right subtrees. If a node receives non-null returns from both children, it means `p` and `q` are on opposite sides, making this node their Lowest Common Ancestor. If only one side is non-null, both targets are located in that subtree, so we propagate the result upwards.",
+    "when_to_use": "Use this to find the Lowest Common Ancestor in a standard Binary Tree. If the tree is a Binary Search Tree (BST), use the BST properties to route left/right instead for O(H) time without full traversal."
+  },
+  {
+    "id": "drill_28_validate_bst_dfs_with_min_max_bounds",
+    "title": "Validate BST (DFS with min/max bounds)",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def is_valid_bst(self, root: TreeNode) -> bool:\n        pass",
+    "inputs_given": "root = TreeNode(2)\nroot.left = TreeNode(1)\nroot.right = TreeNode(3)",
+    "test_cases": [
+      {
+        "call": "r=TreeNode(2); r.left=TreeNode(1); r.right=TreeNode(3); Solution().is_valid_bst(r)",
+        "expected": "True"
+      },
+      {
+        "call": "r=TreeNode(5); r.left=TreeNode(1); r.right=TreeNode(4); r.right.left=TreeNode(3); r.right.right=TreeNode(6); Solution().is_valid_bst(r)",
+        "expected": "False"
+      },
+      {
+        "call": "r=TreeNode(2); r.left=TreeNode(2); Solution().is_valid_bst(r)",
+        "expected": "False"
+      }
+    ],
+    "tags": [],
+    "difficulty": "medium",
+    "description": "Given the <code>root</code> of a binary tree, determine if it is a valid binary search tree (BST).",
+    "solution_code": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def is_valid_bst(self, root: TreeNode) -> bool:\n        def dfs(node, lower, upper):\n            if not node:\n                return True\n                \n            if node.val <= lower or node.val >= upper:\n                return False\n                \n            return dfs(node.left, lower, node.val) and dfs(node.right, node.val, upper)\n            \n        return dfs(root, float('-inf'), float('inf'))",
+    "solution_explanation": "To validate a BST, every node's value must strictly fall within a valid range `(lower, upper)`. We traverse top-down, passing these bounds. When we go to the left child, the current node's value becomes the new `upper` bound. When we go to the right child, the current node's value becomes the new `lower` bound. A violation immediately returns False.",
+    "when_to_use": "Use this min/max bounding technique to validate BST properties. It's cleaner and safer than checking against previously visited nodes in an inorder traversal."
+  },
+  {
+    "id": "drill_29_diameter_of_binary_tree_dfs_postorder",
+    "title": "Diameter of binary tree (DFS postorder)",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def diameter(self, root: TreeNode) -> int:\n        pass",
+    "inputs_given": "root = TreeNode(1)\nroot.left = TreeNode(2)\nroot.right = TreeNode(3)\nroot.left.left = TreeNode(4)\nroot.left.right = TreeNode(5)",
+    "test_cases": [
+      {
+        "call": "r=TreeNode(1); r.left=TreeNode(2); r.right=TreeNode(3); r.left.left=TreeNode(4); r.left.right=TreeNode(5); Solution().diameter(r)",
+        "expected": "3"
+      },
+      {
+        "call": "r=TreeNode(1); r.left=TreeNode(2); Solution().diameter(r)",
+        "expected": "1"
+      },
+      {
+        "call": "r=TreeNode(1); Solution().diameter(r)",
+        "expected": "0"
+      }
+    ],
+    "tags": [],
+    "difficulty": "easy",
+    "description": "Given the <code>root</code> of a binary tree, return the length of the diameter of the tree. The diameter is the length of the longest path between any two nodes.",
+    "solution_code": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def diameter(self, root: TreeNode) -> int:\n        self.max_diam = 0\n        \n        def dfs(node):\n            if not node:\n                return 0\n                \n            left_depth = dfs(node.left)\n            right_depth = dfs(node.right)\n            \n            # The diameter passing through this node is left_depth + right_depth\n            self.max_diam = max(self.max_diam, left_depth + right_depth)\n            \n            # Return the depth of the longest path going down\n            return 1 + max(left_depth, right_depth)\n            \n        dfs(root)\n        return self.max_diam",
+    "solution_explanation": "We compute the longest path recursively using postorder traversal. A node's contribution to its parent's depth is `1 + max(left_depth, right_depth)`. However, the longest path (diameter) might not pass through the root, but form an inverted 'V' at any node. Thus, at each node, we update a global maximum with `left_depth + right_depth`.",
+    "when_to_use": "Use this pattern (Tree DP / returning depth while mutating a global answer) for tree problems involving paths that can form an inverted 'V' at any subtree root."
+  },
+  {
+    "id": "drill_30_max_path_sum_in_binary_tree_tree_dp",
+    "title": "Max path sum in binary tree (tree DP)",
+    "stub": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def max_path_sum(self, root: TreeNode) -> int:\n        pass",
+    "inputs_given": "root = TreeNode(-10)\nroot.left = TreeNode(9)\nroot.right = TreeNode(20)\nroot.right.left = TreeNode(15)\nroot.right.right = TreeNode(7)",
+    "test_cases": [
+      {
+        "call": "r=TreeNode(-10); r.left=TreeNode(9); r.right=TreeNode(20); r.right.left=TreeNode(15); r.right.right=TreeNode(7); Solution().max_path_sum(r)",
+        "expected": "42"
+      },
+      {
+        "call": "r=TreeNode(1); r.left=TreeNode(2); r.right=TreeNode(3); Solution().max_path_sum(r)",
+        "expected": "6"
+      },
+      {
+        "call": "r=TreeNode(-3); Solution().max_path_sum(r)",
+        "expected": "-3"
+      }
+    ],
+    "tags": [],
+    "difficulty": "hard",
+    "description": "A path in a binary tree is a sequence of nodes where each pair of adjacent nodes in the sequence has an edge connecting them. Return the maximum path sum of any non-empty path.",
+    "solution_code": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def max_path_sum(self, root: TreeNode) -> int:\n        self.max_sum = float('-inf')\n        \n        def dfs(node):\n            if not node:\n                return 0\n                \n            # Ignore paths with negative sums\n            left_max = max(0, dfs(node.left))\n            right_max = max(0, dfs(node.right))\n            \n            # Update the global max with the path that forms an inverted 'V'\n            self.max_sum = max(self.max_sum, node.val + left_max + right_max)\n            \n            # Return the max straight path sum extendable to the parent\n            return node.val + max(left_max, right_max)\n            \n        dfs(root)\n        return self.max_sum",
+    "solution_explanation": "This is Tree DP. For each node, we recursively find the maximum path sum in its left and right subtrees. We use `max(0, ...)` to ignore negative paths (as they would only reduce the sum). The local max path sum through the current node is `node.val + left_max + right_max`. However, a path can only branch once, so when returning to the parent, we can only supply a single straight branch: `node.val + max(left_max, right_max)`.",
+    "when_to_use": "Use this logic for advanced Tree DP problems where a path can change direction exactly once (at the highest node of the path) but must be a straight line when viewed from above."
+  }
+]
