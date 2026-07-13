@@ -1,0 +1,4 @@
+data/
+config/reminder.local.json
+__pycache__/
+*.pyc
